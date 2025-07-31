@@ -1,0 +1,195 @@
+[
+  {
+    "uId": 1,
+    "company": "CasaGrand",
+    "des": "Handles property inquiries and sales",
+    "agent": "Real Estate Agent",
+    "agentKey": "realestateagent",
+    "isActive": true,
+    "agentNos": [
+      {
+        "number": "9876543201",
+        "agentId": "realestateagent-1001",
+        "callsMade": 120,
+        "isActive": true,
+        "callHistory": [
+          {
+            "callId": "cID1001",
+            "userNo": 7247248713,
+            "timestamp": "2025-07-03T09:30:00Z",
+            "type": "OUTGOING",
+            "status": "MISSED",
+            "duration": 0,
+            "transcription": [],
+            "gender": null,
+            "overall_performance_rating": null,
+            "positive_feedback": null,
+            "improvement_feedback": null,
+            "communication_quality": null,
+            "communication_feedback": null,
+            "property_buying_interest": null,
+            "emotional_state": null,
+            "conversation_summary": null,
+            "call_outcome": null
+          },
+          {
+            "callId": "cID1002",
+            "userNo": 7247248712,
+            "timestamp": "2025-07-03T10:15:00Z",
+            "type": "INCOMING",
+            "status": "ANSWERED",
+            "duration": 120,
+            "transcription": [
+              { "speaker": "live_agent", "text": "ஹலோ, காசா கிராண்ட்ல இருந்து பேசுறோம். சென்னையில வீடு இல்லனா ஃப்ளாட் வாங்க இன்ட்ரஸ்டடா இருந்தா எண் ஒன்றை அழுத்தவும்.", "language": "Tamil" },
+              { "speaker": "live_agent", "text": "எங்க கிட்ட நல்லா ஆஃபர்ஸ்ல லேண்ட் இருக்கு. உங்க பிரிப்பர்ட் ஏரியா என்னன்னு சொல்லுங்க? சென்னையில எங்க பாக்குறீங்க?", "language": "Tamil" },
+              { "speaker": "customer", "text": "నేను తురైపక్కం చూస్తున్నాను.", "language": "Telugu" },
+              { "speaker": "live_agent", "text": "தற்போது உங்களுக்காக காட்ட எந்த சொத்துக்களும் பெரும்பாடி உங்களுக்கு விருப்பமான விருப்பமாக இருக்கலாம். நீங்கள் அதைப்பற்றி அறிய விரும்புகிறீர்களா?", "language": "Tamil" },
+              { "speaker": "customer", "text": "ఎక్కడ ఉంది ఫ్లాట్స్ లో", "language": "Telugu" },
+              { "speaker": "live_agent", "text": "பெருங்குடியில் மூன்று மற்றும் நான்கு பிஎச்கே வீடுகள் உள்ளன. இது அப்பல்லோ மருத்துவமனைக்கு அருகிலும் ஐந்துக்கும் மேற்பட்ட சர்வதேச பள்ளிகளுக்கு அருகிலும் விமான நிலையத்திலிருந்து 10 km தூரத்திலும் அமைந்துள்ளது. உங்களுக்கு வேறு ஏதேனும் கேள்விகள் இருக்கிறதா?", "language": "Tamil" },
+              { "speaker": "customer", "text": "தாம்பரம்ல வந்தா ஃப்ளாட்", "language": "Tamil" },
+              { "speaker": "live_agent", "text": "தாம்பரத்தில் மூன்று பிஎச்கே தனி வில்லா உள்ளது. இது குரோம்பேட்டை தாம்பரம் சாலை மற்றும் மெட்ரோ ரயில் நிலையத்திலிருந்து 2 km தூரத்தில் உள்ளது. இது சென்னை சர்வதேச விமான நிலையத்திலிருந்து 25 km தூரத்தில் உள்ளது. உங்களுக்கு இதில் ஏதேனும் விருப்பம் இருக்கிறதா?", "language": "Tamil" },
+              { "speaker": "customer", "text": "నాకు ఇప్పుడే షిఫ్ట్ అవ్వాలి అలాగై ఒక ఫ్లాట్ లో చెప్పు. నెక్స్ట్ మంత్ లేకుండా ఇప్పుడే షిఫ్ట్ అవ్వాలి.", "language": "Telugu" },
+              { "speaker": "live_agent", "text": "நீங்கள் உடனே குடிவரக்கூடிய ஒரு வீட்டை தேடுகிறீர்கள் என்றால் சிறுசேரியில் வீடுகள் உள்ளன. இது 5 ஏக்கர் பரப்பளவில் நூற்றுக்கும் மேற்பட்ட ஆடம்பர வீடுகளை கொண்டுள்ளது. மேலும் இது SIPCOT SEZ மற்றும் ஐந்துக்கும் மேற்பட்ட பள்ளிகளுக்கு அருகாமையில் உள்ளது. இது உங்களுக்கு விருப்பமானதா?", "language": "Tamil" },
+              { "speaker": "customer", "text": "సరే నేను పెట్టేస్తాను", "language": "Telugu" },
+              { "speaker": "live_agent", "text": "கண்டிப்பாக உங்களுக்காக ஒரு தள வருகையை ஏற்பாடு செய்ய நான் உங்களுக்கு உதவட்டுமா? உங்கள் பெயர் மற்றும் நீங்கள் வர விரும்பும் நேரத்தை தெரிந்து கொள்ளலாமா? நீங்கள் காலை 6 மணி முதல் மாலை 7 மணி வரை நேரத்தை தேர்ந்தெடுக்கலாம்.", "language": "Tamil" },
+              { "speaker": "customer", "text": "నా పేరు సుభా నేను రేపు మార్నింగ్ 11:00 కి వస్తా", "language": "Telugu" },
+              { "speaker": "live_agent", "text": "சரி சுப்பா உங்கள் பெயர் மற்றும் நேரத்தை நான் சேமித்தேன். வேறு ஏதும் தேவையா?", "language": "Tamil" },
+              { "speaker": "customer", "text": "లేదు ఏమి లేదు", "language": "Telugu" },
+              { "speaker": "customer", "text": "లేదు ఏమి లేదు", "language": "Telugu" },
+              { "speaker": "customer", "text": "నువ్వు కాల్ కట్ చేసేయ్", "language": "Telugu" },
+              { "speaker": "live_agent", "text": "சரி சுப்பா நீங்கள் அழைப்பை முடிக்க விரும்புகிறீர்கள் என்று நான் உறுதிப்படுத்த விரும்புகிறேன். தயவுசெய்து எனக்கு தெரியப்படுத்துங்கள்.", "language": "Tamil" },
+              { "speaker": "customer", "text": "కట్ చేయి", "language": "Telugu" }
+            ],
+            "gender": "female",
+            "overall_performance_rating": "6/10",
+            "positive_feedback": "The live agent effectively introduces the available properties and tries to match the properties with the customer's needs, showing good product knowledge.",
+            "improvement_feedback": "The agent could be more proactive in addressing the customer's specific needs and concerns. The agent could improve by actively listening to the customer's spoken languages.",
+            "communication_quality": "average",
+            "communication_feedback": "The agent's voice is clear and professional. The agent is somewhat responsive but fails to fully understand the customer's immediate needs. There is a lack of engagement in understanding the customer's Telugu utterances fully.",
+            "property_buying_interest": "medium",
+            "emotional_state": "neutral",
+            "conversation_summary": "The customer shows interest in finding a property that is available for immediate move-in. She mentions her preference for properties around Turaippakkam and then asks about properties in Tambaram. She provides her name and schedules a visit for the next day.",
+            "call_outcome": "appointment_scheduled"
+          }
+        ]
+      },
+      {
+        "number": "9876543202",
+        "agentId": "realestateagent-1002",
+        "callsMade": 85,
+        "isActive": true,
+        "callHistory": [
+          {
+            "callId": "cID1001",
+            "userNo": 7247248713,
+            "timestamp": "2025-07-03T09:30:00Z",
+            "type": "OUTGOING",
+            "status": "ANSWERED",
+            "duration": 0,
+            "transcription": [],
+            "gender": null,
+            "overall_performance_rating": null,
+            "positive_feedback": null,
+            "improvement_feedback": null,
+            "communication_quality": null,
+            "communication_feedback": null,
+            "property_buying_interest": null,
+            "emotional_state": null,
+            "conversation_summary": null,
+            "call_outcome": null
+          }
+        ]
+      },
+      {
+        "number": "9876543204",
+        "agentId": "realestateagent-1004",
+        "callsMade": 22,
+        "isActive": false,
+        "callHistory": []
+      },
+      {
+        "number": "9876543205",
+        "agentId": "realestateagent-1005",
+        "callsMade": 20,
+        "isActive": true,
+        "callHistory": []
+      },
+      {
+        "number": "9876543206",
+        "agentId": "realestateagent-1006",
+        "callsMade": 18,
+        "isActive": false,
+        "callHistory": []
+      },
+      {
+        "number": "9876543207",
+        "agentId": "realestateagent-1007",
+        "callsMade": 15,
+        "isActive": true,
+        "callHistory": []
+      },
+      {
+        "number": "9876543208",
+        "agentId": "realestateagent-1008",
+        "callsMade": 12,
+        "isActive": true,
+        "callHistory": []
+      },
+      {
+        "number": "9876543209",
+        "agentId": "realestateagent-1009",
+        "callsMade": 10,
+        "isActive": true,
+        "callHistory": []
+      },
+      {
+        "number": "9876543210",
+        "agentId": "realestateagent-1010",
+        "callsMade": 8,
+        "isActive": true,
+        "callHistory": []
+      }
+    ]
+  },
+  {
+    "uId": 2,
+    "company": "CasaGrand",
+    "des": "Schedules appointments and meetings",
+    "agent": "Appointment Booking",
+    "agentKey": "appointbooking",
+    "isActive": true,
+    "agentNos": [
+      {
+        "number": "9876543211",
+        "agentId": "appointbooking-2001",
+        "callsMade": 65,
+        "isActive": true,
+        "callHistory": []
+      },
+      {
+        "number": "9876543212",
+        "agentId": "appointbooking-2002",
+        "callsMade": 42,
+        "isActive": true,
+        "callHistory": []
+      }
+    ]
+  },
+  {
+    "uId": 3,
+    "company": "CasaGrand",
+    "des": "Provides customer support and assistance",
+    "agent": "Support",
+    "agentKey": "support",
+    "isActive": false,
+    "agentNos": [
+      {
+        "number": "9876543213",
+        "agentId": "support-3001",
+        "callsMade": 78,
+        "isActive": false,
+        "callHistory": []
+      }
+    ]
+  }
+]
