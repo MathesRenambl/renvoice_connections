@@ -1,0 +1,57 @@
+[
+  {
+    "name": "Hosted",
+    "keyName": "hosted",
+    "options": [
+      { "name": "cloud hosted", "price": 1 },
+      { "name": "Self hosted", "price": 0.5 },
+      { "name": "Web socket", "price": 0.5 }
+    ]
+  },
+  {
+    "name": "Speech Recognition",
+    "keyName": "speechRecognition",
+    "options": [
+      { "name": "Default", "price": 0.5 },
+      { "name": "Google", "price": 1 },
+      { "name": "AWS Transcribe", "price": 1 },
+      { "name": "Custom", "price": 0 }
+    ]
+  },
+  {
+    "name": "AI Model",
+    "keyName": "AIModel",
+
+    "options": [
+      { "name": "Default AI Model", "price": 0.5 },
+      { "name": "GPT 4o mini", "price": 1 },
+      { "name": "GPT 4o", "price": 1 },
+      { "name": "GPT 4.1", "price": 1 },
+      { "name": "GPT 4.1 mini", "price": 1 },
+      { "name": "GPT 4.1 nano", "price": 1 },
+      { "name": "Claude 3.7 sonnet", "price": 1 },
+      { "name": "Claude 3.5 haiku", "price": 1 },
+      { "name": "Gemini 2.0 flash", "price": 1 },
+      { "name": "Gemini 2.0 Flash Lite", "price": 1 },
+      { "name": "Custom Ai Model", "price": 0 }
+    ]
+  },
+  {
+    "name": "Speech Synthesis",
+    "keyName": "speechSynthesis",
+
+    "options": [
+      { "name": "Default", "price": 0.5 },
+      { "name": "Google", "price": 1 },
+      { "name": "Microsoft Azure", "price": 1 },
+      { "name": "IBM Watson", "price": 1 },
+      { "name": "Custom", "price": 0 }
+    ]
+  },
+  {
+    "name": "Dialogue (AI Model + Speech Synthesis)",
+    "keyName": "dialogue",
+
+    "options": [{ "name": "Google Native", "price": 1.5 }]
+  }
+]
