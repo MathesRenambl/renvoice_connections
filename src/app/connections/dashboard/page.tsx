@@ -1,148 +1,186 @@
 "use client";
 import React, { useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Network, Activity, XCircle, Search, FileDown, Users, Clock, Filter, ChevronLeft, ChevronRight, Calendar, CreditCard, Wifi } from "lucide-react";
+import { Network, Activity, XCircle, Search, FileDown, Users, Clock, Filter, ChevronLeft, ChevronRight, Calendar, CreditCard, Wifi, ChevronDown, ChevronUp, TrendingUp, BarChart3, CheckCircle } from "lucide-react";
 
-
-const connectionHistory = [
+// Updated license data with licenseStatus field
+const licenseData = [
   {
-    _id: "688866d1480f165d9825f849",
+    org_id: "ORG12345",
+    paymentId: "PAY123456",
+    clientId: "CLIENT56789",
+    licenseId: "LIC12345",
+    licenseName: "Premium Enterprise License",
+    licenseStatus: "ACTIVE",
+    startDate: "2024-01-15T00:00:00.000Z",
+    endDate: "2025-01-15T00:00:00.000Z",
+    usage: [],
+    connections: [
+      {
+        connectionId: "CONN98765",
+        clientId: "CLIENT56789",
+        connectionStatus: "ACTIVE",
+        usage: [
+          { start: "2024-08-01T09:00:00.000Z", end: "2024-08-01T10:30:00.000Z", sessionId: "SESSION001" },
+          { start: "2024-08-01T14:00:00.000Z", end: "2024-08-01T15:45:00.000Z", sessionId: "SESSION002" }
+        ]
+      },
+      {
+        connectionId: "CONN98766",
+        clientId: "CLIENT56790",
+        connectionStatus: "ACTIVE",
+        usage: [
+          { start: "2024-08-01T11:00:00.000Z", end: "2024-08-01T12:00:00.000Z", sessionId: "SESSION003" }
+        ]
+      },
+      {
+        connectionId: "CONN98767",
+        clientId: "CLIENT56791",
+        connectionStatus: "IN_ACTIVE",
+        usage: []
+      }
+    ],
+    overallUsage: "225",
+    lastUsage: "2024-08-01T15:45:00.000Z"
+  },
+  {
     org_id: "ORG12346",
-    connection_id: "CONN131102",
-    client_id: "CLIENT13221",
-    license_id: "LIC12346",
-    status: "active",
-    paymentID: "PAY123456",
-    createdDate: "2024-08-01T10:00:00",
-    liscenceStart: "2024-08-10T00:00:00",
-    liscenceEnd: "2025-09-10T00:00:00",
+    paymentId: "PAY123457",
+    clientId: "CLIENT56792",
+    licenseId: "LIC12346",
+    licenseName: "Standard Business License",
+    licenseStatus: "ACTIVE",
+    startDate: "2024-02-01T00:00:00.000Z",
+    endDate: "2025-02-01T00:00:00.000Z",
     usage: [],
-    phoneNumber: "9943310704",
-    connectionStatus: "connected",
-    overallUsage: "0 minutes",
-    lastDate: "2024-09-20T11:15:00"
+    connections: [
+      {
+        connectionId: "CONN98768",
+        clientId: "CLIENT56792",
+        connectionStatus: "ACTIVE",
+        usage: [
+          { start: "2024-08-01T08:00:00.000Z", end: "2024-08-01T09:15:00.000Z", sessionId: "SESSION004" }
+        ]
+      }
+    ],
+    overallUsage: "75",
+    lastUsage: "2024-08-01T09:15:00.000Z"
   },
   {
-    _id: "688866d1480f165d9825f850",
-    org_id: "ORG12346", 
-    connection_id: "CONN131103",
-    client_id: "CLIENT13222",
-    license_id: "LIC12347",
-    status: "active",
-    paymentID: "PAY123457",
-    createdDate: "2024-07-15T09:30:00",
-    liscenceStart: "2024-07-20T00:00:00",
-    liscenceEnd: "2025-07-20T00:00:00",
-    usage: [],
-    phoneNumber: "9943310705",
-    connectionStatus: "connected",
-    overallUsage: "45 minutes",
-    lastDate: "2024-09-21T14:30:00"
-  },
-  {
-    _id: "688866d1480f165d9825f851",
-    org_id: "ORG12346",
-    connection_id: "CONN131104",
-    client_id: "CLIENT13223",
-    license_id: "LIC12348",
-    status: "inactive",
-    paymentID: "PAY123458",
-    createdDate: "2024-06-01T08:00:00",
-    liscenceStart: "2024-06-05T00:00:00",
-    liscenceEnd: "2024-12-05T00:00:00",
-    usage: [],
-    phoneNumber: "9943310706",
-    connectionStatus: "disconnected",
-    overallUsage: "120 minutes",
-    lastDate: "2024-09-19T16:45:00"
-  },
-  {
-    _id: "688866d1480f165d9825f852",
     org_id: "ORG12347",
-    connection_id: "CONN131105",
-    client_id: "CLIENT13224",
-    license_id: "LIC12349",
-    status: "active",
-    paymentID: "PAY123459",
-    createdDate: "2024-09-01T12:00:00",
-    liscenceStart: "2024-09-05T00:00:00",
-    liscenceEnd: "2025-09-05T00:00:00",
+    paymentId: "PAY123458",
+    clientId: "CLIENT56793",
+    licenseId: "LIC12347",
+    licenseName: "Enterprise Plus License",
+    licenseStatus: "ACTIVE",
+    startDate: "2024-03-01T00:00:00.000Z",
+    endDate: "2025-03-01T00:00:00.000Z",
     usage: [],
-    phoneNumber: "9943310707",
-    connectionStatus: "connected",
-    overallUsage: "30 minutes",
-    lastDate: "2024-09-22T09:30:00"
+    connections: [
+      {
+        connectionId: "CONN98769",
+        clientId: "CLIENT56793",
+        connectionStatus: "ACTIVE",
+        usage: [
+          { start: "2024-08-01T10:00:00.000Z", end: "2024-08-01T12:30:00.000Z", sessionId: "SESSION005" }
+        ]
+      },
+      {
+        connectionId: "CONN98770",
+        clientId: "CLIENT56794",
+        connectionStatus: "ACTIVE",
+        usage: [
+          { start: "2024-08-01T13:00:00.000Z", end: "2024-08-01T14:45:00.000Z", sessionId: "SESSION006" }
+        ]
+      },
+      {
+        connectionId: "CONN98771",
+        clientId: "CLIENT56795",
+        connectionStatus: "IN_ACTIVE",
+        usage: []
+      },
+      {
+        connectionId: "CONN98772",
+        clientId: "CLIENT56796",
+        connectionStatus: "IN_ACTIVE",
+        usage: []
+      }
+    ],
+    overallUsage: "255",
+    lastUsage: "2024-08-01T14:45:00.000Z"
   },
   {
-    _id: "688866d1480f165d9825f853",
-    org_id: "ORG12347",
-    connection_id: "CONN131106",
-    client_id: "CLIENT13225",
-    license_id: "LIC12350",
-    status: "inactive",
-    paymentID: "PAY123460",
-    createdDate: "2024-05-15T14:20:00",
-    liscenceStart: "2024-05-20T00:00:00",
-    liscenceEnd: "2024-11-20T00:00:00",
-    usage: [],
-    phoneNumber: "9943310708",
-    connectionStatus: "disconnected",
-    overallUsage: "200 minutes",
-    lastDate: "2024-09-18T18:45:00"
-  },
-  {
-    _id: "688866d1480f165d9825f854",
     org_id: "ORG12348",
-    connection_id: "CONN131107",
-    client_id: "CLIENT13226",
-    license_id: "LIC12351",
-    status: "active",
-    paymentID: "PAY123461",
-    createdDate: "2024-09-10T15:30:00",
-    liscenceStart: "2024-09-15T00:00:00",
-    liscenceEnd: "2025-09-15T00:00:00",
+    paymentId: "PAY123459",
+    clientId: "CLIENT56797",
+    licenseId: "LIC12348",
+    licenseName: "Starter License",
+    licenseStatus: "IN_ACTIVE",
+    startDate: "2024-04-01T00:00:00.000Z",
+    endDate: "2024-11-01T00:00:00.000Z",
     usage: [],
-    phoneNumber: "9943310709",
-    connectionStatus: "connected",
-    overallUsage: "75 minutes",
-    lastDate: "2024-09-23T10:20:00"
+    connections: [
+      {
+        connectionId: "CONN98773",
+        clientId: "CLIENT56797",
+        connectionStatus: "IN_ACTIVE",
+        usage: []
+      }
+    ],
+    overallUsage: "0",
+    lastUsage: "2024-07-15T10:00:00.000Z"
   },
   {
-    _id: "688866d1480f165d9825f855",
-    org_id: "ORG12348",
-    connection_id: "CONN131108",
-    client_id: "CLIENT13227",
-    license_id: "LIC12352",
-    status: "inactive",
-    paymentID: "PAY123462",
-    createdDate: "2024-04-20T11:45:00",
-    liscenceStart: "2024-04-25T00:00:00",
-    liscenceEnd: "2024-10-25T00:00:00",
-    usage: [],
-    phoneNumber: "9943310710",
-    connectionStatus: "disconnected",
-    overallUsage: "300 minutes",
-    lastDate: "2024-09-15T13:30:00"
-  },
-  {
-    _id: "688866d1480f165d9825f856",
     org_id: "ORG12349",
-    connection_id: "CONN131109",
-    client_id: "CLIENT13228",
-    license_id: "LIC12353",
-    status: "active",
-    paymentID: "PAY123463",
-    createdDate: "2024-08-15T09:00:00",
-    liscenceStart: "2024-08-20T00:00:00",
-    liscenceEnd: "2025-08-20T00:00:00",
+    paymentId: "PAY123460",
+    clientId: "CLIENT56798",
+    licenseId: "LIC12349",
+    licenseName: "Professional License",
+    licenseStatus: "ACTIVE",
+    startDate: "2024-05-01T00:00:00.000Z",
+    endDate: "2024-10-15T00:00:00.000Z",
     usage: [],
-    phoneNumber: "9943310711",
-    connectionStatus: "connected",
-    overallUsage: "150 minutes",
-    lastDate: "2024-09-24T16:45:00"
+    connections: Array.from({ length: 8 }, (_, i) => ({
+      connectionId: `CONN9877${4 + i}`,
+      clientId: `CLIENT5679${8 + i}`,
+      connectionStatus: i < 5 ? "ACTIVE" : "IN_ACTIVE",
+      usage: i < 5 ? [
+        { start: "2024-08-01T09:00:00.000Z", end: "2024-08-01T10:30:00.000Z", sessionId: `SESSION00${7 + i}` }
+      ] : []
+    })),
+    overallUsage: "450",
+    lastUsage: "2024-08-01T16:30:00.000Z"
+  },
+  {
+    org_id: "ORG12350",
+    paymentId: "PAY123461",
+    clientId: "CLIENT56799",
+    licenseId: "LIC12350",
+    licenseName: "Basic License",
+    licenseStatus: "IN_ACTIVE",
+    startDate: "2024-06-01T00:00:00.000Z",
+    endDate: "2025-06-01T00:00:00.000Z",
+    usage: [],
+    connections: [
+      {
+        connectionId: "CONN98781",
+        clientId: "CLIENT56799",
+        connectionStatus: "IN_ACTIVE",
+        usage: []
+      },
+      {
+        connectionId: "CONN98782",
+        clientId: "CLIENT56800",
+        connectionStatus: "IN_ACTIVE",
+        usage: []
+      }
+    ],
+    overallUsage: "180",
+    lastUsage: "2024-07-20T12:00:00.000Z"
   }
 ];
 
@@ -172,39 +210,314 @@ const getDaysUntilExpiry = (endDate) => {
   return diffDays;
 };
 
+// Updated function to use licenseStatus field
+const isLicenseActive = (license) => {
+  return license.licenseStatus === 'ACTIVE';
+};
+
+// License Usage Analytics Component
+const LicenseUsageAnalytics = () => {
+  // Process data to extract usage and connection information
+  const processUsageData = () => {
+    return licenseData.map(license => {
+      const usageMinutes = parseInt(license.overallUsage) || 0;
+      const totalConnections = license.connections.length;
+      const activeConnections = license.connections.filter(conn => conn.connectionStatus === 'ACTIVE').length;
+      const inactiveConnections = license.connections.filter(conn => conn.connectionStatus === 'IN_ACTIVE').length;
+      const licenseIsActive = isLicenseActive(license);
+      
+      return {
+        licenseId: license.licenseId,
+        licenseName: license.licenseName,
+        clientId: license.clientId,
+        usage: usageMinutes,
+        totalConnections,
+        activeConnections,
+        inactiveConnections,
+        connections: license.connections,
+        lastUsage: license.lastUsage,
+        endDate: license.endDate,
+        isActive: licenseIsActive,
+        licenseStatus: license.licenseStatus
+      };
+    }).sort((a, b) => b.usage - a.usage);
+  };
+
+  const chartData = processUsageData();
+
+  // Updated Custom tooltip
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      
+      return (
+        <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-lg backdrop-blur-sm bg-white/95 max-w-sm">
+          <div className="border-b border-gray-100 pb-3 mb-3">
+            <p className="font-bold text-gray-900 text-lg">{label}</p>
+            <p className="text-sm text-gray-600 mt-1">{data.licenseName}</p>
+          </div>
+          
+          <div className="space-y-2 mb-3">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600 text-sm">Usage:</span>
+              <span className="font-bold text-blue-600 text-lg">{data.usage} minutes</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600 text-sm">License Status:</span>
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                data.licenseStatus === 'ACTIVE'
+                  ? 'bg-green-100 text-green-700 border border-green-200' 
+                  : 'bg-red-100 text-red-700 border border-red-200'
+              }`}>
+                <div className={`w-2 h-2 rounded-full mr-1 ${
+                  data.licenseStatus === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                {data.licenseStatus}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600 text-sm">Active Connections:</span>
+              <span className="font-semibold text-green-600">{data.activeConnections}</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600 text-sm">Inactive Connections:</span>
+              <span className="font-semibold text-red-600">{data.inactiveConnections}</span>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-100 pt-2 mt-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">Last Activity:</span>
+              <span className="text-gray-700 font-medium">{formatDateTime(data.lastUsage)}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="space-y-6 mt-6">
+      {/* Enhanced Bar Chart */}
+      <Card className="border-gray-200 bg-gradient-to-br from-white to-gray-50">
+        <CardHeader className="bg-gradient-to-r from-white to-white rounded-t-lg">
+          <CardTitle className="text-3xl font-bold text-black">
+            License Usage Analytics
+          </CardTitle>
+          <CardDescription className="text-gray-600 text-lg">
+            Interactive usage breakdown by license ID with connection details
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-8">
+          <div className="h-[500px] w-full bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={chartData}
+                margin={{
+                  top: 30,
+                  right: 40,
+                  left: 30,
+                  bottom: 80,
+                }}
+                barCategoryGap="30%"
+                maxBarSize={60}
+              >
+                <defs>
+                  <linearGradient id="usageGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9}/>
+                    <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.8}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#e5e7eb" 
+                  strokeOpacity={0.6}
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="licenseId" 
+                  angle={-35}
+                  textAnchor="end"
+                  height={100}
+                  fontSize={11}
+                  fontWeight="500"
+                  stroke="#374151"
+                  tick={{ fill: '#374151' }}
+                  axisLine={{ stroke: '#d1d5db', strokeWidth: 1 }}
+                  tickLine={{ stroke: '#d1d5db' }}
+                />
+                <YAxis 
+                  stroke="#374151"
+                  fontSize={12}
+                  fontWeight="500"
+                  tick={{ fill: '#374151' }}
+                  axisLine={{ stroke: '#d1d5db', strokeWidth: 1 }}
+                  tickLine={{ stroke: '#d1d5db' }}
+                  label={{ 
+                    value: 'Usage (Minutes)', 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    style: { textAnchor: 'middle', fill: '#374151', fontWeight: '600' }
+                  }}
+                />
+                <Tooltip 
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'rgba(59, 130, 246, 0.1)', radius: 4 }}
+                />
+                <Bar 
+                  dataKey="usage" 
+                  name="Usage (Minutes)"
+                  radius={[6, 6, 0, 0]}
+                  fill="url(#usageGradient)"
+                  stroke="#1d4ed8"
+                  strokeWidth={0.5}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          {/* Enhanced Legend */}
+          <div className="flex items-center justify-center -mt-11 space-x-8 p-4 bg-gray-50 rounded-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full shadow-sm"></div>
+              <span className="text-sm font-medium text-gray-700">Usage (Minutes)</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-4 h-4 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-sm"></div>
+              <span className="text-sm font-medium text-gray-700">Active License</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-4 h-4 bg-gradient-to-r from-red-500 to-red-600 rounded-full shadow-sm"></div>
+              <span className="text-sm font-medium text-gray-700">Inactive License</span>
+            </div>
+          </div>
+          </div>
+          
+        </CardContent>
+      </Card>
+
+      {/* Enhanced License Overview Table */}
+      <Card className="border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-xl text-gray-900">License Overview</CardTitle>
+          <CardDescription className="text-gray-500">
+            Detailed breakdown of licenses with connection information
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {chartData.map((item, index) => (
+              <div key={item.licenseId} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <p 
+                          className="font-bold text-gray-900 text-lg cursor-pointer hover:text-blue-600 hover:underline transition-colors duration-200"
+                          // onClick={() => handleLicenseClick(item.licenseId)}
+                          title="Click to view detailed license usage"
+                        >
+                          {item.licenseId}
+                        </p>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                          item.licenseStatus === 'ACTIVE'
+                            ? 'bg-green-100 text-green-700 border border-green-200' 
+                            : 'bg-red-100 text-red-700 border border-red-200'
+                        }`}>
+                          <div className={`w-2 h-2 rounded-full mr-1 ${
+                            item.licenseStatus === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'
+                          }`}></div>
+                          {item.licenseStatus}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">{item.licenseName}</p>
+                      <p className="text-xs text-gray-500">Client: {item.clientId}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-2xl text-blue-600">{item.usage} min</p>
+                    <p className="text-sm text-gray-500">Total Usage</p>
+                  </div>
+                </div>
+                
+                {/* Connection Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                  <div className="bg-white rounded-lg p-3 border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Total Connections</span>
+                      <span className="font-semibold text-gray-900">{item.totalConnections}</span>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Active</span>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        <div className="w-2 h-2 rounded-full mr-1 bg-green-500"></div>
+                        {item.activeConnections}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Inactive</span>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                        <div className="w-2 h-2 rounded-full mr-1 bg-red-500"></div>
+                        {item.inactiveConnections}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Info */}
+                <div className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t">
+                  <span>Last Activity: {formatDateTime(item.lastUsage)}</span>
+                  <span>Expires: {formatDate(item.endDate)} ({getDaysUntilExpiry(item.endDate)} days)</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 const ConnectionsDashboard = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
-
-  const filteredConnections = connectionHistory.filter(connection => {
-    const matchesSearch = 
-      connection.client_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      connection.connection_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      connection.license_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      connection.phoneNumber.includes(searchTerm);
-    const matchesFilter = filterStatus === "all" || connection.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
-
-  // Pagination
-  const totalPages = Math.ceil(filteredConnections.length / recordsPerPage);
-  const startIndex = (currentPage - 1) * recordsPerPage;
-  const paginatedConnections = filteredConnections.slice(startIndex, startIndex + recordsPerPage);
-
-  // Reset to page 1 when filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterStatus]);
-
-  const activeConnections = connectionHistory.filter(c => c.status === 'active').length;
-  const inactiveConnections = connectionHistory.filter(c => c.status === 'inactive').length;
-  const connectedDevices = connectionHistory.filter(c => c.connectionStatus === 'connected').length;
-  const expiringInNext30Days = connectionHistory.filter(c => {
-    const daysToExpiry = getDaysUntilExpiry(c.liscenceEnd);
+  // Calculate statistics from licenseData
+  const totalLicenses = licenseData.length;
+  
+  // Updated to use licenseStatus field
+  const activeLicenses = licenseData.filter(license => license.licenseStatus === 'ACTIVE').length;
+  
+  const connectedDevices = licenseData.reduce((total, license) => {
+    return total + license.connections.filter(conn => conn.connectionStatus === 'ACTIVE').length;
+  }, 0);
+  
+  const expiringInNext30Days = licenseData.filter(license => {
+    const daysToExpiry = getDaysUntilExpiry(license.endDate);
     return daysToExpiry <= 30 && daysToExpiry > 0;
   }).length;
+
+  // Handle license click to navigate to usage page
+  const handleLicenseClick = (licenseId) => {
+    // Store the selected license ID in memory (since localStorage is not available)
+    // In a real application, you would use localStorage or pass via routing
+    try {
+      // Simulate navigation - in real app you'd use router.push() or similar
+      alert(`Navigating to License Usage Page for ${licenseId}\n\nIn a real application, this would:\n1. Store licenseId in localStorage\n2. Navigate to /license-usage page\n3. Auto-filter the table for this license`);
+      
+      // If localStorage was available, you would do:
+      // localStorage.setItem('selectedLicenseId', licenseId);
+      // router.push('/license-usage');
+    } catch (error) {
+      console.log('Navigation would happen here');
+    }
+  };
 
   return (
     <div className="">
@@ -214,9 +527,11 @@ const ConnectionsDashboard = () => {
         <div className="border-b border-gray-200 pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Dashboard
+              </h1>
               <p className="text-gray-600 mt-1">
-                Overview of total connections, their active/inactive status, and detailed connection metrics
+                Overview of licenses, connections, and usage analytics
               </p>
             </div>
           </div>
@@ -228,15 +543,15 @@ const ConnectionsDashboard = () => {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  Total Connections
+                  Total Licenses
                 </CardTitle>
                 <Network className="h-4 w-4 text-gray-400" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{connectionHistory.length}</div>
+              <div className="text-2xl font-bold text-gray-900">{totalLicenses}</div>
               <p className="text-xs text-gray-500 mt-1">
-                All registered clients
+                All registered licenses
               </p>
             </CardContent>
           </Card>
@@ -245,15 +560,15 @@ const ConnectionsDashboard = () => {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  Active Connections
+                  Active Licenses
                 </CardTitle>
-                <Activity className="h-4 w-4 text-gray-400" />
+                <CheckCircle className="h-4 w-4 text-green-400" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">{activeConnections}</div>
+              <div className="text-2xl font-bold text-green-600">{activeLicenses}</div>
               <p className="text-xs text-gray-500 mt-1">
-                Currently active
+                Currently active licenses
               </p>
             </CardContent>
           </Card>
@@ -293,193 +608,8 @@ const ConnectionsDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Table Card */}
-        <Card className="border-gray-200">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl text-gray-900">Connection Management</CardTitle>
-                <CardDescription className="text-gray-500">
-                  Manage all active and inactive connections
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-400" />
-                <span className="text-sm text-gray-500">
-                  {filteredConnections.length} results
-                </span>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* Search and Filter Controls */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search Client ID, Connection ID, License ID, or Phone Number"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-gray-300 focus:border-gray-500 focus:ring-gray-500"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={filterStatus === "all" ? "default" : "outline"}
-                  onClick={() => setFilterStatus("all")}
-                  size="sm"
-                  className={filterStatus === "all" ? "bg-gray-900 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={filterStatus === "active" ? "default" : "outline"}
-                  onClick={() => setFilterStatus("active")}
-                  size="sm"
-                  className={filterStatus === "active" ? "bg-gray-900 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}
-                >
-                  Active
-                </Button>
-                <Button
-                  variant={filterStatus === "inactive" ? "default" : "outline"}
-                  onClick={() => setFilterStatus("inactive")}
-                  size="sm"
-                  className={filterStatus === "inactive" ? "bg-gray-900 hover:bg-gray-800" : "border-gray-300 text-gray-700 hover:bg-gray-50"}
-                >
-                  Inactive
-                </Button>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr className="border-b border-gray-200">
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Client ID</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Connection ID</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">License ID</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Phone Number</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Status</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Connection Status</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Overall Usage</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Last Active</th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900">Days to Expiry</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white text-center">
-                  {paginatedConnections.map((connection, index) => {
-                    const daysToExpiry = getDaysUntilExpiry(connection.liscenceEnd);
-                    return (
-                      <tr
-                        key={connection._id}
-                        className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
-                      >
-                        <td className="py-3 px-4 text-center">
-                          <div className="text-sm text-black">{connection.client_id}</div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="text-sm text-black">{connection.connection_id}</div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="text-sm text-black">{connection.license_id}</div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="text-sm text-black">{connection.phoneNumber}</div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <Badge
-                            variant="outline"
-                            className={`${connection.status === 'active'
-                              ? 'border-green-300 text-gray-700 bg-green-200'
-                              : 'border-red-300 text-red-500 bg-red-200'
-                            }`}
-                          >
-                            {connection.status === 'active' ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4">
-                          <Badge
-                            variant="outline"
-                            className={`${connection.connectionStatus === 'connected'
-                              ? 'border-green-300 text-gray-700 bg-green-200'
-                              : 'border-red-300 text-red-500 bg-red-200'
-                            }`}
-                          >
-                            <Wifi className="w-3 h-3 mr-1" />
-                            {connection.connectionStatus}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-black text-sm">
-                          {connection.overallUsage}
-                        </td>
-                        <td className="py-3 px-4 text-black text-sm">
-                          {formatDateTime(connection.lastDate)}
-                        </td>
-                        <td className="py-3 px-4">
-                          <Badge
-                            variant="outline"
-                            className={`${daysToExpiry <= 7 
-                              ? 'border-red-300 text-red-700 bg-red-100'
-                              : daysToExpiry <= 30 
-                                ? 'border-yellow-300 text-yellow-700 bg-yellow-100'
-                                : 'border-green-300 text-green-700 bg-green-100'
-                            }`}
-                          >
-                            {daysToExpiry > 0 ? `${daysToExpiry} days` : 'Expired'}
-                          </Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {filteredConnections.length > 0 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                <div className="text-sm text-gray-600">
-                  Showing {startIndex + 1} to {Math.min(startIndex + recordsPerPage, filteredConnections.length)} of {filteredConnections.length} connections
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    Previous
-                  </Button>
-                  <span className="text-sm text-gray-600">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {filteredConnections.length === 0 && (
-              <div className="text-center py-12 text-gray-500">
-                <Network className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium mb-2 text-gray-600">No connections found</p>
-                <p className="text-sm text-gray-500">Try adjusting your search or filter criteria</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* License Analytics Section */}
+        <LicenseUsageAnalytics />
       </div>
     </div>
   );

@@ -38,9 +38,9 @@ const navigationData = {
       icon: BadgeCheck,
       type: "single"
     },
-  purchaseConnection: {
+  purchaseLicense: {
       title: "Purchase license",
-      href: "/connections/purchaseConnections",
+      href: "/connections/purchaseLicense",
       icon: Plug,
       type: "single"
     },
