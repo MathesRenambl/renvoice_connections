@@ -506,12 +506,14 @@
 // export default LicenseUsagePage;
 
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation"; // Next.js 13+ App Router
+// import { useRouter } from "next/router"; // Next.js 12 Pages Router
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Network, Search, Filter, ChevronLeft, ChevronRight, Calendar, Wifi } from "lucide-react";
+import { Network, Search, Filter, ChevronLeft, ChevronRight, Calendar, Wifi, ArrowLeft } from "lucide-react";
 
 // Sample license data with connections
 const licensesData = [
@@ -736,6 +738,10 @@ const calculateUsageMinutes = (usage) => {
 };
 
 const LicenseUsagePage = () => {
+    const router = useRouter();
+    const searchParams = useSearchParams(); // For Next.js 13+ App Router
+    // const router = useRouter(); // For Next.js 12 Pages Router - use router.query.licenseId
+    
     const [selectedLicense, setSelectedLicense] = useState("all");
     const [selectedConnectionStatus, setSelectedConnectionStatus] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
@@ -743,6 +749,24 @@ const LicenseUsagePage = () => {
     const [editingLicense, setEditingLicense] = useState(null);
     const [licensesState, setLicensesState] = useState(licensesData);
     const recordsPerPage = 10;
+
+    // Handle URL parameters on component mount
+    useEffect(() => {
+        // For Next.js 13+ App Router
+        const licenseIdFromUrl = searchParams.get('licenseId');
+        
+        // For Next.js 12 Pages Router, use:
+        // const licenseIdFromUrl = router.query.licenseId;
+        
+        if (licenseIdFromUrl) {
+            setSelectedLicense(licenseIdFromUrl);
+            // Optionally set the search term to the license ID as well
+            setSearchTerm(licenseIdFromUrl);
+        }
+    }, [searchParams]); // For Next.js 12, use [router.query]
+
+    // Navigate back to dashboard
+   
 
     // Flatten all connections from all licenses for the table
     const allConnections = useMemo(() => {
@@ -837,6 +861,16 @@ const LicenseUsagePage = () => {
             <div className="border-b border-gray-200 pb-4">
                 <div className="flex items-center justify-between">
                     <div>
+                        {/* <div className="flex items-center space-x-4 mb-2">
+                            
+                            {selectedLicenseDetails && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-1">
+                                    <span className="text-sm font-medium text-blue-700">
+                                        Viewing: {selectedLicenseDetails.licenseId}
+                                    </span>
+                                </div>
+                            )}
+                        </div> */}
                         <h1 className="text-3xl font-bold text-gray-900">License Usage Management</h1>
                         <p className="text-gray-600 mt-1">
                             Monitor and manage license usage across all connections

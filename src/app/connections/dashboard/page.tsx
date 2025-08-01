@@ -1,5 +1,7 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation"; // Next.js 13+ App Router
+// import { useRouter } from "next/router"; // Next.js 12 Pages Router
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -216,7 +218,7 @@ const isLicenseActive = (license) => {
 };
 
 // License Usage Analytics Component
-const LicenseUsageAnalytics = () => {
+const LicenseUsageAnalytics = ({ onLicenseClick }) => {
   // Process data to extract usage and connection information
   const processUsageData = () => {
     return licenseData.map(license => {
@@ -340,8 +342,8 @@ const LicenseUsageAnalytics = () => {
                 />
                 <XAxis 
                   dataKey="licenseId" 
-                  angle={-35}
-                  textAnchor="end"
+                  angle={360}
+                  textAnchor="middle"
                   height={100}
                   fontSize={11}
                   fontWeight="500"
@@ -419,7 +421,7 @@ const LicenseUsageAnalytics = () => {
                       <div className="flex items-center space-x-2 mb-1">
                         <p 
                           className="font-bold text-gray-900 text-lg cursor-pointer hover:text-blue-600 hover:underline transition-colors duration-200"
-                          // onClick={() => handleLicenseClick(item.licenseId)}
+                          onClick={() => onLicenseClick(item.licenseId)}
                           title="Click to view detailed license usage"
                         >
                           {item.licenseId}
@@ -488,6 +490,8 @@ const LicenseUsageAnalytics = () => {
 };
 
 const ConnectionsDashboard = () => {
+  const router = useRouter();
+
   // Calculate statistics from licenseData
   const totalLicenses = licenseData.length;
   
@@ -505,18 +509,17 @@ const ConnectionsDashboard = () => {
 
   // Handle license click to navigate to usage page
   const handleLicenseClick = (licenseId) => {
-    // Store the selected license ID in memory (since localStorage is not available)
-    // In a real application, you would use localStorage or pass via routing
-    try {
-      // Simulate navigation - in real app you'd use router.push() or similar
-      alert(`Navigating to License Usage Page for ${licenseId}\n\nIn a real application, this would:\n1. Store licenseId in localStorage\n2. Navigate to /license-usage page\n3. Auto-filter the table for this license`);
-      
-      // If localStorage was available, you would do:
-      // localStorage.setItem('selectedLicenseId', licenseId);
-      // router.push('/license-usage');
-    } catch (error) {
-      console.log('Navigation would happen here');
-    }
+    // METHOD 1: URL Parameters (Query String) - Recommended
+    router.push(`/connections/licenseUsage?licenseId=${licenseId}`);
+    
+    // METHOD 2: Dynamic Route Parameters (if your route is /license-usage/[licenseId])
+    // router.push(`/license-usage/${licenseId}`);
+    
+    // METHOD 3: Programmatic navigation with state
+    // router.push({
+    //   pathname: '/license-usage',
+    //   query: { licenseId: licenseId }
+    // });
   };
 
   return (
@@ -609,7 +612,7 @@ const ConnectionsDashboard = () => {
         </div>
 
         {/* License Analytics Section */}
-        <LicenseUsageAnalytics />
+        <LicenseUsageAnalytics onLicenseClick={handleLicenseClick} />
       </div>
     </div>
   );
