@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { ChevronRight, LayoutDashboard, CreditCard, Plug } from "lucide-react";
+import { ChevronRight, LayoutDashboard, CreditCard, Plug, BadgeCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -32,9 +32,15 @@ const navigationData = {
     icon: LayoutDashboard,
     type: "single"
   },
+  licenseUsage: {
+      title: "License Usage",
+      href: "/connections/licenseUsage",
+      icon: BadgeCheck,
+      type: "single"
+    },
   purchaseConnection: {
       title: "Purchase license",
-      href: "/connections/purchaseConnections",
+      href: "/connections/purchaseLicense",
       icon: Plug,
       type: "single"
     },
