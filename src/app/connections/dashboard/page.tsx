@@ -200,7 +200,7 @@ const formatDateTime = (date) => {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    credit: '2-digit'
   });
 };
 
@@ -222,7 +222,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
   // Process data to extract usage and connection information
   const processUsageData = () => {
     return licenseData.map(license => {
-      const usageMinutes = parseInt(license.overallUsage) || 0;
+      const usageCredits = parseInt(license.overallUsage) || 0;
       const totalConnections = license.connections.length;
       const activeConnections = license.connections.filter(conn => conn.connectionStatus === 'ACTIVE').length;
       const inactiveConnections = license.connections.filter(conn => conn.connectionStatus === 'IN_ACTIVE').length;
@@ -232,7 +232,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
         licenseId: license.licenseId,
         licenseName: license.licenseName,
         clientId: license.clientId,
-        usage: usageMinutes,
+        usage: usageCredits,
         totalConnections,
         activeConnections,
         inactiveConnections,
@@ -262,7 +262,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
           <div className="space-y-2 mb-3">
             <div className="flex items-center justify-between">
               <span className="text-gray-600 text-sm">Usage:</span>
-              <span className="font-bold text-blue-600 text-lg">{data.usage} minutes</span>
+              <span className="font-bold text-blue-600 text-lg">{data.usage} Credits</span>
             </div>
             
             <div className="flex items-center justify-between">
@@ -314,7 +314,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
             Interactive usage breakdown by license ID with connection details
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-8">
+        <CardContent className="">
           <div className="h-[500px] w-full bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -360,7 +360,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                   axisLine={{ stroke: '#d1d5db', strokeWidth: 1 }}
                   tickLine={{ stroke: '#d1d5db' }}
                   label={{ 
-                    value: 'Usage (Minutes)', 
+                    value: 'Usage (Credits)', 
                     angle: -90, 
                     position: 'insideLeft',
                     style: { textAnchor: 'middle', fill: '#374151', fontWeight: '600' }
@@ -372,7 +372,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                 />
                 <Bar 
                   dataKey="usage" 
-                  name="Usage (Minutes)"
+                  name="Usage (Credits)"
                   radius={[6, 6, 0, 0]}
                   fill="url(#usageGradient)"
                   stroke="#1d4ed8"
@@ -381,10 +381,10 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
               </BarChart>
             </ResponsiveContainer>
           {/* Enhanced Legend */}
-          <div className="flex items-center justify-center -mt-11 space-x-8 p-4 bg-gray-50 rounded-xl">
+          <div className="flex items-center justify-center -mt-28 space-x-8 p-4 bg-gray-50 rounded-xl">
             <div className="flex items-center space-x-3">
               <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full shadow-sm"></div>
-              <span className="text-sm font-medium text-gray-700">Usage (Minutes)</span>
+              <span className="text-sm font-medium text-gray-700">Usage (Credit's)</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-4 h-4 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-sm"></div>
