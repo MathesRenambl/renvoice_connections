@@ -30,10 +30,10 @@ const serviceConfig = {
     ],
     service: [
         { name: "calls", duration: 12, credit: 10000, amount: 100 },
-        { name: "analysis", duration: 12, amount: 150 },
-        { name: "f1", duration: 12, amount: 50 },
-        { name: "f2", duration: 12, amount: 99 },
-        { name: "f3", duration: 12, amount: 199 }
+        { name: "analysis", duration: 12, credit: 5000, amount: 150 },
+        { name: "f1", duration: 12, credit: 3000, amount: 50 },
+        { name: "f2", duration: 12, credit: 5000, amount: 99 },
+        { name: "f3", duration: 12, credit: 8000, amount: 199 }
     ],
     activateConnection: 900,
     gst: 18
@@ -370,7 +370,7 @@ const PurchaseLicense = () => {
                                         <tr className="border-b-2 border-gray-200">
                                             <th className="text-left py-3 px-4 font-semibold">Select</th>
                                             <th className="text-left py-3 px-4 font-semibold">Service</th>
-                                            <th className="text-left py-3 px-4 font-semibold">Minutes</th>
+                                            <th className="text-left py-3 px-4 font-semibold">Credit's</th>
                                             <th className="text-left py-3 px-4 font-semibold">Amount (₹)</th>
                                             <th className="text-left py-3 px-4 font-semibold">Duration</th>
                                         </tr>

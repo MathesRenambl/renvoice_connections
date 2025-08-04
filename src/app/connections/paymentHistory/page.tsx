@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Download, Filter, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Filter, Search, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,6 +17,7 @@ interface PaymentRecord {
     status: 'paid' | 'pending' | 'failed';
     invoice: string;
     businessName: string;
+    paymentType: string;
 }
 
 // Mock data - replace with your API call
@@ -28,7 +29,8 @@ const mockPaymentData: PaymentRecord[] = [
         amount: 2500.00,
         status: 'paid',
         invoice: 'INV-2024-001',
-        businessName: 'TechCorp Solutions'
+        businessName: 'TechCorp Solutions',
+        paymentType: "CREDIT"
     },
     {
         id: '2',
@@ -37,7 +39,8 @@ const mockPaymentData: PaymentRecord[] = [
         amount: 1450.00,
         status: 'pending',
         invoice: 'INV-2024-002',
-        businessName: 'Digital Dynamics'
+        businessName: 'Digital Dynamics',
+        paymentType: "AMOUNT"
     },
     {
         id: '3',
@@ -46,7 +49,8 @@ const mockPaymentData: PaymentRecord[] = [
         amount: 3375.50,
         status: 'paid',
         invoice: 'INV-2024-003',
-        businessName: 'Global Enterprises'
+        businessName: 'Global Enterprises',
+        paymentType: "AMOUNT"
     },
     {
         id: '4',
@@ -55,7 +59,8 @@ const mockPaymentData: PaymentRecord[] = [
         amount: 750.00,
         status: 'failed',
         invoice: 'INV-2024-004',
-        businessName: 'StartUp Hub'
+        businessName: 'StartUp Hub',
+        paymentType: "AMOUNT"
     },
     {
         id: '5',
@@ -64,12 +69,14 @@ const mockPaymentData: PaymentRecord[] = [
         amount: 5200.00,
         status: 'failed',
         invoice: 'INV-2024-005',
-        businessName: 'Enterprise Plus'
+        businessName: 'Enterprise Plus',
+        paymentType: "AMOUNT"
     }
 ];
 
 const PaymentHistory: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [paymentTypeFilter, setPaymentTypeFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [monthFilter, setMonthFilter] = useState<string>('all');
     const [yearFilter, setYearFilter] = useState<string>('all');
@@ -110,15 +117,17 @@ const PaymentHistory: React.FC = () => {
             // Status filter
             const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
 
+            // status PaymentType
+            const matchesPaymentType = paymentTypeFilter === "all" || record.paymentType === paymentTypeFilter
             // Month filter
             const matchesMonth = monthFilter === 'all' || recordMonth.toString() === monthFilter;
 
             // Year filter
             const matchesYear = yearFilter === 'all' || recordYear.toString() === yearFilter;
 
-            return matchesSearch && matchesStatus && matchesMonth && matchesYear;
+            return matchesSearch && matchesStatus && matchesMonth && matchesYear && matchesPaymentType;
         });
-    }, [searchTerm, statusFilter, monthFilter, yearFilter]);
+    }, [searchTerm, statusFilter, monthFilter, yearFilter, paymentTypeFilter]);
 
     // Calculate summary statistics
     const totalAmount = filteredData.reduce((sum, record) => sum + record.amount, 0);
@@ -225,6 +234,17 @@ const PaymentHistory: React.FC = () => {
                 />
               </div> */}
                             {/* <div className='flex'> */}
+                            <Select value={paymentTypeFilter} onValueChange={setPaymentTypeFilter}>
+                                <SelectTrigger className="w-full sm:w-40">
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All PaymentType</SelectItem>
+                                    <SelectItem value="CREDIT">Credit</SelectItem>
+
+                                    <SelectItem value="AMOUNT">Amount</SelectItem>
+                                </SelectContent>
+                            </Select>
                             <Select value={statusFilter} onValueChange={setStatusFilter}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Status" />
@@ -282,6 +302,7 @@ const PaymentHistory: React.FC = () => {
                                     {/* <th className="py-3 px-4 font-medium text-gray-900">Business Name</th> */}
                                     <th className="py-3 px-4 font-medium text-gray-900">No of Connections</th>
                                     <th className="py-3 px-4 font-medium text-gray-900">Pay Date</th>
+                                    <th className="py-3 px-4 font-medium text-gray-900">Payment Type</th>
                                     <th className="py-3 px-4 font-medium text-gray-900">Amount</th>
                                     <th className="py-3 px-4 font-medium text-gray-900">Status</th>
                                     <th className="py-3 px-4 font-medium text-gray-900">Invoice</th>
@@ -296,7 +317,18 @@ const PaymentHistory: React.FC = () => {
                                         {/* <td className="py-4 px-4 text-center text-sm text-black">{record.businessName}</td> */}
                                         <td className="py-4 px-4 text-center text-gray-600">{record.connectionCount.toLocaleString()}</td>
                                         <td className="py-4 px-4 text-center text-gray-600">{formatDate(record.payDate)}</td>
-                                        <td className="py-4 px-4 text-center font-semibold text-gray-900">{formatCurrency(record.amount)}</td>
+                                        <td className="py-4 px-4 text-center font-semibold text-gray-900">{record.paymentType}</td>
+
+                                        <td className="py-4 px-4 text-center font-semibold text-gray-900 flex items-center justify-center">
+                                            {record.paymentType === "CREDIT" ? (
+                                                <>
+                                                    <CreditCard size={20} className="inline-block mr-1" />
+                                                    {record.amount}
+                                                </>
+                                            ) : (
+                                                formatCurrency(record.amount)
+                                            )}
+                                        </td>
                                         <td className="py-4 px-4 text-center">
                                             {getStatusBadge(record.status)}
                                         </td>
