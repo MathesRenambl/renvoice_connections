@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Network, Search, Filter, ChevronLeft, ChevronRight, Calendar, Wifi, ArrowLeft } from "lucide-react";
+import { Network, Search, Filter, ChevronLeft, ChevronRight, Calendar, Wifi, ArrowLeft, Clock } from "lucide-react";
 
 // Sample license data with connections
 const licensesData = [
@@ -40,7 +40,7 @@ const licensesData = [
             }
         ],
         overallUsage: "195",
-        lastUsage: "2024-08-01T11:15:00.000Z"
+        lastUsage: "2025-08-01T11:15:00.000Z"
     },
     {
         org_id: "ORG12346",
@@ -229,6 +229,16 @@ const calculateUsageMinutes = (usage) => {
     }, 0);
 };
 
+// Helper function to determine if usage is recent or older
+const getUsageCategory = (lastUsageDate) => {
+    const now = new Date();
+    const lastUsage = new Date(lastUsageDate);
+    const diffInDays = Math.floor((now - lastUsage) / (1000 * 60 * 60 * 24));
+    
+    // Consider usage within 7 days as "recent", older than 7 days as "older"
+    return diffInDays <= 7 ? 'recent' : 'older';
+};
+
 const LicenseUsagePage = () => {
     const router = useRouter();
     const searchParams = useSearchParams(); // For Next.js 13+ App Router
@@ -236,6 +246,7 @@ const LicenseUsagePage = () => {
     
     const [selectedLicense, setSelectedLicense] = useState("all");
     const [selectedConnectionStatus, setSelectedConnectionStatus] = useState("all");
+    const [selectedLastUsage, setSelectedLastUsage] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [editingLicense, setEditingLicense] = useState(null);
@@ -271,7 +282,8 @@ const LicenseUsagePage = () => {
                     licenseName: license.licenseName,
                     licenseEndDate: license.endDate,
                     lastUsage: license.lastUsage,
-                    overallUsage: calculateUsageMinutes(connection.usage)
+                    overallUsage: calculateUsageMinutes(connection.usage),
+                    usageCategory: getUsageCategory(license.lastUsage)
                 });
             });
         });
@@ -292,6 +304,11 @@ const LicenseUsagePage = () => {
             filtered = filtered.filter(connection => connection.connectionStatus === selectedConnectionStatus);
         }
 
+        // Filter by last usage category
+        if (selectedLastUsage !== "all") {
+            filtered = filtered.filter(connection => connection.usageCategory === selectedLastUsage);
+        }
+
         // Filter by search term
         if (searchTerm) {
             filtered = filtered.filter(connection =>
@@ -303,7 +320,7 @@ const LicenseUsagePage = () => {
         }
 
         return filtered;
-    }, [allConnections, selectedLicense, selectedConnectionStatus, searchTerm]);
+    }, [allConnections, selectedLicense, selectedConnectionStatus, selectedLastUsage, searchTerm]);
 
     // Get selected license details for display
     const selectedLicenseDetails = useMemo(() => {
@@ -319,7 +336,7 @@ const LicenseUsagePage = () => {
     // Reset to page 1 when filters change
     React.useEffect(() => {
         setCurrentPage(1);
-    }, [selectedLicense, selectedConnectionStatus, searchTerm]);
+    }, [selectedLicense, selectedConnectionStatus, selectedLastUsage, searchTerm]);
 
     // Handle license name edit
     const handleLicenseNameEdit = (licenseId, newName) => {
@@ -353,16 +370,6 @@ const LicenseUsagePage = () => {
             <div className="border-b border-gray-200 pb-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        {/* <div className="flex items-center space-x-4 mb-2">
-                            
-                            {selectedLicenseDetails && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-1">
-                                    <span className="text-sm font-medium text-blue-700">
-                                        Viewing: {selectedLicenseDetails.licenseId}
-                                    </span>
-                                </div>
-                            )}
-                        </div> */}
                         <h1 className="text-3xl font-bold text-gray-900">License Usage Management</h1>
                         <p className="text-gray-600 mt-1">
                             Monitor and manage license usage across all connections
@@ -372,7 +379,7 @@ const LicenseUsagePage = () => {
             </div>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Filter by License
@@ -410,6 +417,32 @@ const LicenseUsagePage = () => {
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Filter by Last Usage
+                    </label>
+                    <Select value={selectedLastUsage} onValueChange={setSelectedLastUsage}>
+                        <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
+                            <SelectValue placeholder="Select usage period" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Usage</SelectItem>
+                            <SelectItem value="recent">
+                                <div className="flex items-center">
+                                    <Clock className="w-4 h-4 mr-2 text-green-500" />
+                                    Recent Usage (≤7 days)
+                                </div>
+                            </SelectItem>
+                            <SelectItem value="older">
+                                <div className="flex items-center">
+                                    <Clock className="w-4 h-4 mr-2 text-orange-500" />
+                                    Older Usage (>7 days)
+                                </div>
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                         Search
                     </label>
                     <div className="relative">
@@ -440,6 +473,11 @@ const LicenseUsagePage = () => {
                                 with {selectedConnectionStatus.toLowerCase()} status
                             </span>
                         )}
+                        {selectedLastUsage !== "all" && (
+                            <span className="ml-1">
+                                with {selectedLastUsage} usage
+                            </span>
+                        )}
                         {selectedLicenseDetails && (
                             <span className="ml-2 text-blue-600 font-medium">
                                 • License expires on {formatDate(selectedLicenseDetails.endDate)}
@@ -459,7 +497,7 @@ const LicenseUsagePage = () => {
                             <th className="text-center py-3 px-4 font-medium text-gray-900">Connection Status</th>
                             <th className="text-center py-3 px-4 font-medium text-gray-900">Overall Usage</th>
                             <th className="text-center py-3 px-4 font-medium text-gray-900">Last Usage</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-900">License End Date</th>
+                            {/* <th className="text-center py-3 px-4 font-medium text-gray-900">License End Date</th> */}
                             <th className="text-center py-3 px-4 font-medium text-gray-900">License</th>
                         </tr>
                     </thead>
@@ -491,11 +529,14 @@ const LicenseUsagePage = () => {
                                     {connection.overallUsage} Credits
                                 </td>
                                 <td className="py-3 px-4 text-black text-sm">
-                                    {formatTimeAgo(connection.lastUsage)}
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Clock className={`w-3 h-3 ${connection.usageCategory === 'recent' ? 'text-green-500' : 'text-orange-500'}`} />
+                                        <span>{formatTimeAgo(connection.lastUsage)}</span>
+                                    </div>
                                 </td>
-                                <td className="py-3 px-4 text-black text-sm">
+                                {/* <td className="py-3 px-4 text-black text-sm">
                                     {formatDate(connection.licenseEndDate)}
-                                </td>
+                                </td> */}
                                 <td className="py-3 px-4 text-black text-sm">
                                     <div className="text-xs text-gray-500">{connection.licenseId}</div>
                                     <div className="text-sm font-medium">
