@@ -587,8 +587,8 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-2xl text-indigo-600">{item.usage} <span className="text-xl text-indigo-600 font-normal">credits</span></p>
-                      <p className="text-sm text-gray-900">Total Usage</p>
+                      <p className="font-bold text-2xl text-blue-600">{item.usage} <span className="font-bold text-2xl text-blue-600 ">credits</span></p>
+                      <p className="text-1xl text-gray-900">Total Usage</p>
                     </div>
                   </div>
 
@@ -634,12 +634,12 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-center space-x-2">
                         <Activity className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm text-gray-600">Last Activity:</span>
+                        <span className="text-sm text-black">Last Activity:</span>
                         <span className="text-sm font-bold text-gray-900">{formatDateTime(item.lastUsage)}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 ml-10">
                         <Calendar className="w-4 h-4 text-purple-500" />
-                        <span className="text-sm text-gray-600">Expires:</span>
+                        <span className="text-sm text-black">Expires:</span>
                         <div className="flex items-center space-x-1">
                           <span className="text-sm font-bold text-gray-900">{formatDate(item.endDate)}</span>
                           <span className={`text-sm font-bold px-2 py-1 rounded-full ${isExpired
