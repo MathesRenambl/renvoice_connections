@@ -1,6 +1,6 @@
 'use client';
-import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Download, Filter, Search, CreditCard } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, Download, Filter, Search, Bolt, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,154 +8,283 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTitle from '@/components/ui/pageTitle';
 
-// Types
-interface PaymentRecord {
-    id: string;
-    connectionCount: number;
-    payDate: string;
-    amount: number;
-    status: 'paid' | 'pending' | 'failed';
-    invoice: string;
-    businessName: string;
-    paymentType: string;
-}
-
-// Mock data - replace with your API call
-const mockPaymentData: PaymentRecord[] = [
-    {
-        id: '1',
-        connectionCount: 150,
-        payDate: '2024-12-15',
-        amount: 2500.00,
-        status: 'paid',
-        invoice: 'INV-2024-001',
-        businessName: 'TechCorp Solutions',
-        paymentType: "CREDIT"
-    },
-    {
-        id: '2',
-        connectionCount: 87,
-        payDate: '2024-12-01',
-        amount: 1450.00,
-        status: 'pending',
-        invoice: 'INV-2024-002',
-        businessName: 'Digital Dynamics',
-        paymentType: "AMOUNT"
-    },
-    {
-        id: '3',
-        connectionCount: 203,
-        payDate: '2024-11-20',
-        amount: 3375.50,
-        status: 'paid',
-        invoice: 'INV-2024-003',
-        businessName: 'Global Enterprises',
-        paymentType: "AMOUNT"
-    },
-    {
-        id: '4',
-        connectionCount: 45,
-        payDate: '2024-11-15',
-        amount: 750.00,
-        status: 'failed',
-        invoice: 'INV-2024-004',
-        businessName: 'StartUp Hub',
-        paymentType: "AMOUNT"
-    },
-    {
-        id: '5',
-        connectionCount: 312,
-        payDate: '2024-10-30',
-        amount: 5200.00,
-        status: 'failed',
-        invoice: 'INV-2024-005',
-        businessName: 'Enterprise Plus',
-        paymentType: "AMOUNT"
-    }
-];
-
-const PaymentHistory: React.FC = () => {
+const PaymentHistory = () => {
+    const [paymentData, setPaymentData] = useState([]);
+    const [yearsData, setYearsData] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [paymentTypeFilter, setPaymentTypeFilter] = useState<string>('all');
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [monthFilter, setMonthFilter] = useState<string>('all');
-    const [yearFilter, setYearFilter] = useState<string>('all');
+    const [paymentTypeFilter, setPaymentTypeFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [monthFilter, setMonthFilter] = useState('all');
+    const [yearFilter, setYearFilter] = useState('all');
+    const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [pagination, setPagination] = useState({
+        "totalPages": 0,
+        "startItem": 0,
+        "endItem": 0,
+        "currentPage": 0,
+        "limit": 0
+    });
+    const [error, setError] = useState(null);
 
-    // Generate years and months for filters
-    const availableYears = useMemo(() => {
-        const years = new Set(mockPaymentData.map(record => new Date(record.payDate).getFullYear()));
-        return Array.from(years).sort((a, b) => b - a);
+    // API call function - Fixed to properly handle data clearing
+    const fetchLicenses = useCallback(async (page = 1, filters = {}) => {
+        setLoading(true);
+        setError(null);
+
+        // Clear existing data when starting a new fetch to prevent old data showing
+        if (page === 1) {
+            setPaymentData([]);
+            setTotalCount(0);
+        }
+
+        try {
+            const requestBody = {
+                orgId: "ORG12345",
+                page: page
+            };
+
+            // Add filters to request body if they exist
+            if (filters.searchTerm && filters.searchTerm.trim()) {
+                requestBody.licenseId = filters.searchTerm.trim();
+            }
+
+            if (filters.paymentType && filters.paymentType !== "all") {
+                requestBody.paymentType = filters.paymentType;
+            }
+
+            if (filters.status && filters.status !== "all") {
+                requestBody.status = filters.status;
+            }
+
+            if (filters.months && filters.months !== "all") {
+                requestBody.months = filters.months;
+            }
+
+            if (filters.year && filters.year !== "all") {
+                requestBody.year = filters.year;
+            }
+
+            console.log("Request Body:", requestBody);
+
+            const response = await fetch('http://127.0.0.1:8000/payments/getPayment', {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await response.json();
+            console.log("API Response:", data);
+
+            if (data.success) {
+                const payments = data.data[0]?.data || [];
+                const totalCountData = data.data[0]?.totalCount?.[0]?.count || 0;
+                const paginationData = data.pagination || {};
+                const filterYears = data.data[0]?.years?.[0]?.years || [];
+
+                setPaymentData(payments);
+                setYearsData(filterYears);
+                setTotalCount(totalCountData);
+                setPagination(paginationData);
+
+                // Clear any previous errors on successful fetch
+                setError(null);
+            } else {
+                // Handle no data case - clear everything
+                setPaymentData([]);
+                setYearsData([]);
+                setTotalCount(0);
+                setPagination({
+                    "totalPages": 0,
+                    "startItem": 0,
+                    "endItem": 0,
+                    "currentPage": 0,
+                    "limit": 0
+                });
+
+                // Set appropriate error message
+                if (data.data === "No data Found." || !data.data || (Array.isArray(data.data) && data.data.length === 0)) {
+                    setError("No payment records found matching your criteria.");
+                } else {
+                    setError("Failed to fetch payment records. Please try again.");
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching payment records:', err);
+            setError('Failed to fetch payment records. Please try again.');
+            // Clear data on error
+            setPaymentData([]);
+            setYearsData([]);
+            setTotalCount(0);
+            setPagination({
+                "totalPages": 0,
+                "startItem": 0,
+                "endItem": 0,
+                "currentPage": 0,
+                "limit": 0
+            });
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    const months = [
-        { value: '1', label: 'January' },
-        { value: '2', label: 'February' },
-        { value: '3', label: 'March' },
-        { value: '4', label: 'April' },
-        { value: '5', label: 'May' },
-        { value: '6', label: 'June' },
-        { value: '7', label: 'July' },
-        { value: '8', label: 'August' },
-        { value: '9', label: 'September' },
-        { value: '10', label: 'October' },
-        { value: '11', label: 'November' },
-        { value: '12', label: 'December' }
-    ];
+    // Initial load
+    useEffect(() => {
+        fetchLicenses(1);
+    }, [fetchLicenses]);
 
-    // Filter data based on search and filters
-    const filteredData = useMemo(() => {
-        return mockPaymentData.filter(record => {
-            const date = new Date(record.payDate);
-            const recordMonth = date.getMonth() + 1;
-            const recordYear = date.getFullYear();
+    // Helper function to get current filter state
+    const getCurrentFilters = useCallback(() => {
+        return {
+            searchTerm: searchTerm,
+            paymentType: paymentTypeFilter,
+            status: statusFilter,
+            months: monthFilter,
+            year: yearFilter
+        };
+    }, [searchTerm, paymentTypeFilter, statusFilter, monthFilter, yearFilter]);
 
-            // Search filter
-            const matchesSearch = searchTerm === '' ||
-                record.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.invoice.toLowerCase().includes(searchTerm.toLowerCase());
+    // Handle search button click
+    const handleSearch = () => {
+        setCurrentPage(1);
 
-            // Status filter
-            const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
-
-            // status PaymentType
-            const matchesPaymentType = paymentTypeFilter === "all" || record.paymentType === paymentTypeFilter
-            // Month filter
-            const matchesMonth = monthFilter === 'all' || recordMonth.toString() === monthFilter;
-
-            // Year filter
-            const matchesYear = yearFilter === 'all' || recordYear.toString() === yearFilter;
-
-            return matchesSearch && matchesStatus && matchesMonth && matchesYear && matchesPaymentType;
-        });
-    }, [searchTerm, statusFilter, monthFilter, yearFilter, paymentTypeFilter]);
-
-    // Calculate summary statistics
-    const totalAmount = filteredData.reduce((sum, record) => sum + record.amount, 0);
-    const totalConnections = filteredData.reduce((sum, record) => sum + record.connectionCount, 0);
-
-    const getStatusBadge = (status: string) => {
-        const variants: Record<string, string> = {
-            paid: 'bg-green-100 text-green-800 hover:bg-green-100',
-            pending: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
-            failed: 'bg-red-100 text-red-800 hover:bg-red-100',
-            // overdue: 'bg-orange-100 text-orange-800 hover:bg-orange-100'
+        const filters = {
+            searchTerm: searchTerm,
+            paymentType: paymentTypeFilter,
+            status: statusFilter,
+            months: monthFilter,
+            year: yearFilter
         };
 
+        fetchLicenses(1, filters);
+    };
+
+    // Handle Enter key press in search input
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
+    // Handle filter changes - Fixed to properly reset pagination
+    const handlePaymentType = (value) => {
+        setPaymentTypeFilter(value);
+        setCurrentPage(1);
+
+        const filters = {
+            searchTerm: searchTerm,
+            paymentType: value,
+            status: statusFilter,
+            months: monthFilter,
+            year: yearFilter
+        };
+
+        fetchLicenses(1, filters);
+    };
+
+    const handleStatus = (value) => {
+        setStatusFilter(value);
+        setCurrentPage(1);
+
+        const filters = {
+            searchTerm: searchTerm,
+            paymentType: paymentTypeFilter,
+            status: value,
+            months: monthFilter,
+            year: yearFilter
+        };
+
+        fetchLicenses(1, filters);
+    };
+
+    const handleMonths = (value) => {
+        setMonthFilter(value);
+        setCurrentPage(1);
+
+        const filters = {
+            searchTerm: searchTerm,
+            paymentType: paymentTypeFilter,
+            status: statusFilter,
+            months: value,
+            year: yearFilter
+        };
+
+        fetchLicenses(1, filters);
+    };
+
+    const handleYear = (value) => {
+        setYearFilter(value);
+        setCurrentPage(1);
+
+        const filters = {
+            searchTerm: searchTerm,
+            paymentType: paymentTypeFilter,
+            status: statusFilter,
+            months: monthFilter,
+            year: value
+        };
+
+        fetchLicenses(1, filters);
+    };
+
+    // Handle pagination - Fixed to use current filters
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+        fetchLicenses(newPage, getCurrentFilters());
+    };
+
+    // Clear all filters - Fixed to properly reset everything
+    const handleClearFilters = () => {
+        setSearchTerm("");
+        setPaymentTypeFilter("all");
+        setStatusFilter("all");
+        setMonthFilter("all");
+        setYearFilter("all");
+        setCurrentPage(1);
+        setError(null);
+
+        // Fetch with cleared filters
+        fetchLicenses(1, {
+            searchTerm: "",
+            paymentType: "all",
+            status: "all",
+            months: "all",
+            year: "all"
+        });
+    };
+
+    // Check if any filters are active
+    const hasActiveFilters = searchTerm || paymentTypeFilter !== "all" || statusFilter !== "all" || monthFilter !== "all" || yearFilter !== "all";
+
+    // Fixed status badge function to handle all status cases
+    const getStatusBadge = (status) => {
+        console.log(status);
+        const variants = {
+            PAID: 'bg-green-100 text-green-800 hover:bg-green-100',
+            PENDING: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+            FAILED: 'bg-red-100 text-red-800 hover:bg-red-100',
+            INITIATED: 'bg-orange-100 text-orange-800 hover:bg-orange-100',
+            REFUND: 'bg-purple-100 text-purple-800 hover:bg-purple-100'
+        };
         return (
-            <Badge className={variants[status] || 'bg-gray-100 text-gray-800'}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+            <Badge className={variants[status] || 'bg-gray-100 text-gray-800 hover:bg-gray-100'}>
+                {status?.charAt(0).toUpperCase() + status?.slice(1).toLowerCase() || 'Unknown'}
             </Badge>
         );
     };
 
-    const formatCurrency = (amount: number) => {
+    const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR'
-        }).format(amount);
+        }).format(amount || 0);
     };
 
-    const formatDate = (date: string) => {
+    const formatDate = (date) => {
         return new Date(date).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -163,58 +292,31 @@ const PaymentHistory: React.FC = () => {
         });
     };
 
-    const exportData = () => {
-        // Implement export functionality
-        console.log('Exporting payment data...', filteredData);
+    // Fixed viewInvoice function to actually open the invoice
+    const viewInvoice = (invoiceUrl) => {
+        if (invoiceUrl) {
+            window.open(invoiceUrl, '_blank');
+        }
     };
 
-    const viewInvoice = (invoice: string) => {
-        // Implement view invoice functionality
-        console.log('Viewing invoice:', invoice);
+    // Get month name from number
+    const getMonthName = (monthNumber) => {
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        return months[parseInt(monthNumber) - 1] || monthNumber;
     };
 
     return (
         <div className="container mx-auto space-y-6">
-            <PageTitle title="Payment History" description="View and manage your business’s past and recent payment records, including invoices, statuses, and transaction details.">
-                <Button className="bg-black text-white hover:bg-gray-800">
+            <PageTitle title="Payment History" description="View and manage your business's past and recent payment records, including invoices, statuses, and transaction details.">
+                {/* <Button className="bg-black text-white hover:bg-gray-800">
                     <Download className="h-4 w-4 mr-2" />
                     Export
-                </Button>
+                </Button> */}
             </PageTitle>
-
-            {/* Summary Cards
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalAmount)}</div>
-            <p className="text-xs text-muted-foreground">From {filteredData.length} transactions</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Connections</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalConnections.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Across all businesses</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average per Connection</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {totalConnections > 0 ? formatCurrency(totalAmount / totalConnections) : '$0.00'}
-            </div>
-            <p className="text-xs text-muted-foreground">Revenue per connection</p>
-          </CardContent>
-        </Card>
-      </div> */}
-
+           
             {/* Filters */}
             <Card>
                 <CardContent className="p-6">
@@ -224,217 +326,252 @@ const PaymentHistory: React.FC = () => {
                             Filters:
                         </div>
                         <div className="flex flex-col justify-end sm:flex-row gap-4 flex-1">
-                            {/* <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search by business or invoice..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div> */}
-                            {/* <div className='flex'> */}
-                            <Select value={paymentTypeFilter} onValueChange={setPaymentTypeFilter}>
+                            <div className="relative flex-1 max-w-sm">
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="Search by License ID"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        disabled={loading}
+                                    />
+                                    <Button
+                                        onClick={handleSearch}
+                                        className="bg-gray-900 hover:bg-gray-700 text-white px-4"
+                                        disabled={loading}
+                                    >
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <Select value={paymentTypeFilter} onValueChange={handlePaymentType}>
                                 <SelectTrigger className="w-full sm:w-40">
-                                    <SelectValue placeholder="Status" />
+                                    <SelectValue placeholder="Payment Type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All PaymentType</SelectItem>
+                                    <SelectItem value="all">All Payment Types</SelectItem>
                                     <SelectItem value="CREDIT">Credit</SelectItem>
-
                                     <SelectItem value="AMOUNT">Amount</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                           
+                            <Select value={statusFilter} onValueChange={handleStatus}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Status</SelectItem>
-                                    <SelectItem value="paid">Paid</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="failed">Failed</SelectItem>
-                                    {/* <SelectItem value="overdue">Overdue</SelectItem> */}
+                                    <SelectItem value="INITIATED">Initiated</SelectItem>
+                                    <SelectItem value="PAID">Paid</SelectItem>
+                                    <SelectItem value="FAILED">Failed</SelectItem>
+                                    <SelectItem value="REFUND">Refund</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Select value={monthFilter} onValueChange={setMonthFilter}>
+                           
+                            <Select value={monthFilter} onValueChange={handleMonths}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Month" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Months</SelectItem>
-                                    {months.map(month => (
-                                        <SelectItem key={month.value} value={month.value}>
-                                            {month.label}
-                                        </SelectItem>
-                                    ))}
+                                    <SelectItem value='1'>January</SelectItem>
+                                    <SelectItem value='2'>February</SelectItem>
+                                    <SelectItem value='3'>March</SelectItem>
+                                    <SelectItem value='4'>April</SelectItem>
+                                    <SelectItem value='5'>May</SelectItem>
+                                    <SelectItem value='6'>June</SelectItem>
+                                    <SelectItem value='7'>July</SelectItem>
+                                    <SelectItem value='8'>August</SelectItem>
+                                    <SelectItem value='9'>September</SelectItem>
+                                    <SelectItem value='10'>October</SelectItem>
+                                    <SelectItem value='11'>November</SelectItem>
+                                    <SelectItem value='12'>December</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Select value={yearFilter} onValueChange={setYearFilter}>
+                           
+                            <Select value={yearFilter} onValueChange={handleYear}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Year" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Years</SelectItem>
-                                    {availableYears.map(year => (
-                                        <SelectItem key={year} value={year.toString()}>
-                                            {year}
-                                        </SelectItem>
+                                    {yearsData.map((year, index) => (
+                                        <SelectItem key={index} value={year}>{year}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
+                           
+                            {/* Clear Filters Button */}
+                            <div className="flex items-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={handleClearFilters}
+                                    className="w-full"
+                                    disabled={loading}
+                                >
+                                    Clear All Filters
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                    {/* </div> */}
+                   
+                    {/* Active Filters Display */}
+                    {hasActiveFilters && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-medium text-gray-600">Active Filters:</span>
+                                {searchTerm && (
+                                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                        Search: "{searchTerm}"
+                                    </Badge>
+                                )}
+                                {paymentTypeFilter !== "all" && (
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                        Payment Type: {paymentTypeFilter}
+                                    </Badge>
+                                )}
+                                {statusFilter !== "all" && (
+                                    <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                                        Status: {statusFilter}
+                                    </Badge>
+                                )}
+                                {monthFilter !== "all" && (
+                                    <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                                        Month: {getMonthName(monthFilter)}
+                                    </Badge>
+                                )}
+                                {yearFilter !== "all" && (
+                                    <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                                        Year: {yearFilter}
+                                    </Badge>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
-
+           
             {/* Payment Table */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Payment Records ({filteredData.length})</CardTitle>
+                    <CardTitle>Payment Records ({totalCount})</CardTitle>
                 </CardHeader>
                 <CardContent className='p-0'>
-                    <div className="overflow-hidden">
-                        <table className="w-full">
-                            <thead className="bg-gray-50">
-                                <tr className="border-b border-gray-200 text-center">
-                                    {/* <th className="py-3 px-4 font-medium text-gray-900">Business Name</th> */}
-                                    <th className="py-3 px-4 font-medium text-gray-900">No of Connections</th>
-                                    <th className="py-3 px-4 font-medium text-gray-900">Pay Date</th>
-                                    <th className="py-3 px-4 font-medium text-gray-900">Payment Type</th>
-                                    <th className="py-3 px-4 font-medium text-gray-900">Amount</th>
-                                    <th className="py-3 px-4 font-medium text-gray-900">Status</th>
-                                    <th className="py-3 px-4 font-medium text-gray-900">Invoice</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white text-center">
-                                {filteredData.map((record, index) => (
-                                    <tr
-                                        key={record.id}
-                                        className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
-                                    >
-                                        {/* <td className="py-4 px-4 text-center text-sm text-black">{record.businessName}</td> */}
-                                        <td className="py-4 px-4 text-center text-gray-600">{record.connectionCount.toLocaleString()}</td>
-                                        <td className="py-4 px-4 text-center text-gray-600">{formatDate(record.payDate)}</td>
-                                        <td className="py-4 px-4 text-center font-semibold text-gray-900">{record.paymentType}</td>
-
-                                        <td className="py-4 px-4 text-center font-semibold text-gray-900 flex items-center justify-center">
-                                            {record.paymentType === "CREDIT" ? (
-                                                <>
-                                                    <CreditCard size={20} className="inline-block mr-1" />
-                                                    {record.amount}
-                                                </>
-                                            ) : (
-                                                formatCurrency(record.amount)
-                                            )}
-                                        </td>
-                                        <td className="py-4 px-4 text-center">
-                                            {getStatusBadge(record.status)}
-                                        </td>
-                                        <td className="py-4 px-4 text-center">
-                                            <Button
-                                                variant="link"
-                                                className="p-0 h-auto font-medium text-blue-600 hover:text-blue-800"
-                                                onClick={() => viewInvoice(record.invoice)}
-                                            >
-                                                {record.invoice}
-                                            </Button>
-                                        </td>
+                    {error && (
+                        <div className="text-center py-8 text-red-500">
+                            <p className="text-lg font-medium mb-2">No Payment's Found.</p>
+                            <p className="text-sm">{error}</p>
+                        </div>
+                    )}
+                   
+                    {loading && paymentData.length === 0 && (
+                        <div className="text-center py-12">
+                            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                            <p className="text-gray-500">Loading payment records...</p>
+                        </div>
+                    )}
+                   
+                    {!loading && !error && (
+                        <div className="overflow-hidden">
+                            <table className="w-full">
+                                <thead className="bg-gray-50">
+                                    <tr className="border-b border-gray-200 text-center">
+                                        <th className="py-3 px-4 font-medium text-gray-900">License ID</th>
+                                        <th className="py-3 px-4 font-medium text-gray-900">No of Connections</th>
+                                        <th className="py-3 px-4 font-medium text-gray-900">Pay Date</th>
+                                        <th className="py-3 px-4 font-medium text-gray-900">Payment Type</th>
+                                        <th className="py-3 px-4 font-medium text-gray-900">Amount</th>
+                                        <th className="py-3 px-4 font-medium text-gray-900">Status</th>
+                                        <th className="py-3 px-4 font-medium text-gray-900">Invoice</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                        {filteredData.length === 0 && (
-                            <div className="text-center py-12 text-gray-500">
-                                <p className="text-lg font-medium mb-2">No payment records found</p>
-                                <p className="text-sm">Try adjusting your filters or search terms</p>
-                            </div>
-                        )}
-
-                        {/* Pagination component example (optional) */}
-                        {/* Replace filteredData with paginatedData, and add your pagination logic */}
-                        {filteredData.length > 0 && (
-                            <div className="flex items-center justify-between mt-6 p-4 border-t">
-                                <div className="text-sm text-gray-600">
-                                    Showing 1 to {filteredData.length} of {filteredData.length} payments
+                                </thead>
+                                <tbody className="bg-white text-center">
+                                    {paymentData.map((item, index) => (
+                                        <tr
+                                            key={item.licenseId + index}
+                                            className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
+                                        >
+                                            <td className="py-4 px-4 text-center text-gray-600">{item.licenseId}</td>
+                                            <td className="py-4 px-4 text-center text-gray-600">{item.noOfConnections}</td>
+                                            <td className="py-4 px-4 text-center text-gray-600">{formatDate(item.dateOfPurchased)}</td>
+                                            <td className="py-4 px-4 text-center font-semibold text-gray-900">{item.paymentType}</td>
+                                            <td className="py-4 px-4 text-center font-semibold text-gray-900">
+                                                <div className="flex items-center justify-center">
+                                                    {item.paymentType === "CREDIT" ? (
+                                                        <>
+                                                            <Bolt size={20} className="inline-block mr-1" />
+                                                            {item.amount}
+                                                        </>
+                                                    ) : (
+                                                        formatCurrency(item.amount)
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-4 text-center">
+                                                {getStatusBadge(item.paymentStatus)}
+                                            </td>
+                                            <td className="py-4 px-4 text-center">
+                                                {item.invoiceUrl ? (
+                                                    <Button
+                                                        variant="link"
+                                                        className="p-0 h-auto font-medium text-blue-600 hover:text-blue-800"
+                                                        onClick={() => viewInvoice(item.invoiceUrl)}
+                                                    >
+                                                        View Invoice
+                                                    </Button>
+                                                ) : (
+                                                    <span className="text-gray-400">N/A</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                           
+                            {paymentData.length === 0 && !loading && !error && (
+                                <div className="text-center py-12 text-gray-500">
+                                    <p className="text-lg font-medium mb-2">No payment records found</p>
+                                    <p className="text-sm">Try adjusting your filters or search terms</p>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled
-                                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                                    >
-                                        <ChevronLeft className="w-4 h-4" />
-                                        Previous
-                                    </Button>
-                                    <span className="text-sm text-gray-600">Page 1 of 1</span>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled
-                                        className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                                    >
-                                        Next
-                                        <ChevronRight className="w-4 h-4" />
-                                    </Button>
+                            )}
+                           
+                            {paymentData.length > 0 && (
+                                <div className="flex items-center justify-between mt-6 p-4 border-t">
+                                    <div className="text-sm text-gray-600">
+                                        Showing {pagination.startItem} to {pagination.endItem} of {totalCount} payments
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1 || loading}
+                                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" />
+                                            Previous
+                                        </Button>
+                                        <span className="text-sm text-gray-600">
+                                            Page {pagination.currentPage} of {pagination.totalPages}
+                                        </span>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === pagination.totalPages || loading}
+                                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                                        >
+                                            Next
+                                            <ChevronRight className="w-4 h-4" />
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
-
-            {/* Payment Table */}
-            {/* <Card>
-  <CardHeader>
-    <CardTitle>Payment Records ({filteredData.length})</CardTitle>
-  </CardHeader>
-  <CardContent>
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-left py-3 px-4 font-medium text-gray-600">No of Connections</TableHead>
-            <TableHead className="text-left py-3 px-4 font-medium text-gray-600">Pay Date</TableHead>
-            <TableHead className="text-left py-3 px-4 font-medium text-gray-600">Amount</TableHead>
-            <TableHead className="text-left py-3 px-4 font-medium text-gray-600">Status</TableHead>
-            <TableHead className="text-left py-3 px-4 font-medium text-gray-600">Invoice</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredData.map((record) => (
-            <TableRow key={record.id} className="hover:bg-gray-50 transition-colors">
-              <TableCell className="py-4 px-4 text-gray-600">{record.connectionCount.toLocaleString()}</TableCell>
-              <TableCell className="py-4 px-4 text-md">{formatDate(record.payDate)}</TableCell>
-              <TableCell className="font-semibold py-4 px-4">{formatCurrency(record.amount)}</TableCell>
-              <TableCell className="py-4 px-4">{getStatusBadge(record.status)}</TableCell>
-              <TableCell className="py-4 px-4">
-                <Button
-                  variant="link"
-                  className="p-0 h-auto font-medium text-blue-600 hover:text-blue-800"
-                  onClick={() => viewInvoice(record.invoice)}
-                >
-                  {record.invoice}
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {filteredData.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-500 text-lg mb-2">No payment records found</div>
-          <div className="text-gray-400">Try adjusting your filters or search terms</div>
-        </div>
-      )}
-    </div>
-  </CardContent>
-</Card> */}
-
         </div>
     );
 };
