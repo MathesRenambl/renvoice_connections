@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Network, Filter, ChevronLeft, ChevronRight, Clock, Wifi, RotateCcw, Square, Play, MoreHorizontal, PlayCircle, StopCircle } from "lucide-react";
+import { Network, Filter, ChevronLeft, ChevronRight, Clock, Wifi, RotateCcw, Square, Play, MoreHorizontal, PlayCircle, StopCircle, Loader2, XCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -40,11 +41,16 @@ const getUsageCategory = (lastUsageDate) => {
 };
 
 const LicenseUsagePage = () => {
+    const searchParams = useSearchParams();
+    const licenseIdFromParams = searchParams.get('licenseId');
+    
     const [licenses, setLicenses] = useState([]);
     const [connections, setConnections] = useState([]);
     const [totalConnections, setTotalConnections] = useState(0);
     const [uniqueLicenseIds, setUniqueLicenseIds] = useState([]);
     const [licenseIdsLoaded, setLicenseIdsLoaded] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     
     const [selectedLicense, setSelectedLicense] = useState("all");
     const [selectedConnectionStatus, setSelectedConnectionStatus] = useState("all");
@@ -60,7 +66,6 @@ const LicenseUsagePage = () => {
     
     const ORG_ID = "ORG17537870059048";
     const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjcxMzB9.Eq2LRxmI9-m5LBhlHAKomP9ZUQVSsxoapr-xxoEuhOE";
-
 
     // Load only license IDs initially
     const fetchLicenseIds = async () => {
@@ -87,19 +92,33 @@ const LicenseUsagePage = () => {
             if (result.Success && result.Success.licenseIds) {
                 setUniqueLicenseIds(result.Success.licenseIds);
                 setLicenseIdsLoaded(true);
+                
+                // Set license from URL parameter if it exists and is valid
+                if (licenseIdFromParams && result.Success.licenseIds.includes(licenseIdFromParams)) {
+                    setSelectedLicense(licenseIdFromParams);
+                }
             } else {
                 console.error("API returned an error:", result.Error || "Unknown error");
                 setUniqueLicenseIds([]);
+                setError("Failed to load license IDs");
             }
         } catch (error) {
             console.error("Failed to fetch license IDs:", error);
             setUniqueLicenseIds([]);
+            setError("Failed to fetch license IDs. Please try again.");
         }
     };
 
-
     // Fetch connections based on selected filters
     const fetchLicenses = async () => {
+        setLoading(true);
+        setError(null);
+        
+        
+        setConnections([]);
+        setTotalConnections(0);
+        setLicenses([]);
+        
         try {
             const payload = {
                 orgId: ORG_ID,
@@ -161,47 +180,57 @@ const LicenseUsagePage = () => {
                 
                 setConnections(allConnections);
                 
-                // Use the total from API response
                 const actualTotal = responseData.total || allConnections.length;
                 setTotalConnections(actualTotal);
                 
+                
+                setError(null);
+                
             } else {
-                console.error("API returned an error:", result.Error || "Unknown error");
+
                 setLicenses([]);
                 setConnections([]);
                 setTotalConnections(0);
+                
+                
+                if (result.Error === "No data Found." || !result.Success) {
+                    setError("No connections found matching your criteria.");
+                } else {
+                    setError("Failed to fetch connections. Please try again.");
+                }
             }
         } catch (error) {
             console.error("Failed to fetch licenses:", error);
             setLicenses([]);
             setConnections([]);
             setTotalConnections(0);
+            setError('Failed to fetch connections. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
-
 
     // Load license IDs on component mount
     useEffect(() => {
         fetchLicenseIds();
     }, []);
 
-    // Fetch connections only when a specific license is selected or filters change
+   
     useEffect(() => {
         if (licenseIdsLoaded && selectedLicense !== "all") {
             fetchLicenses();
         } else if (selectedLicense === "all") {
-            // Clear connections when "All Licenses" is selected
+          
             setConnections([]);
             setTotalConnections(0);
             setLicenses([]);
+            setError(null);
         }
     }, [selectedLicense, selectedConnectionStatus, selectedLastUsage, currentPage, licenseIdsLoaded]);
     
-    // Reset page when filters change
     useEffect(() => {
         setCurrentPage(1);
     }, [selectedLicense, selectedConnectionStatus, selectedLastUsage]);
-
 
     const handleActionClick = (action, connection) => {
         setSelectedAction(action);
@@ -271,7 +300,7 @@ const LicenseUsagePage = () => {
 
     const totalPages = Math.ceil(totalConnections / recordsPerPage);
 
-    // Determine what message to show when no connections
+   
     const getEmptyStateMessage = () => {
         if (selectedLicense === "all") {
             return {
@@ -288,7 +317,18 @@ const LicenseUsagePage = () => {
 
     const emptyState = getEmptyStateMessage();
 
+    // Clear all filters
+    const handleClearFilters = () => {
+        setSearchTerm("");
+        setSelectedLicense("all");
+        setSelectedConnectionStatus("all");
+        setSelectedLastUsage("all");
+        setCurrentPage(1);
+        setError(null);
+    };
+
     
+    const hasActiveFilters = searchTerm || selectedLicense !== "all" || selectedConnectionStatus !== "all" || selectedLastUsage !== "all";
 
     return (
         <div className="space-y-6">
@@ -310,9 +350,9 @@ const LicenseUsagePage = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Filter by License
                             </label>
-                            <Select value={selectedLicense} onValueChange={setSelectedLicense}>
+                            <Select value={selectedLicense} onValueChange={setSelectedLicense} disabled={!licenseIdsLoaded}>
                                 <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
-                                    <SelectValue placeholder={!licenseIdsLoaded ? "Loading..." : "Select license"} />
+                                    <SelectValue placeholder={!licenseIdsLoaded ? "Loading licenses..." : "Select license"} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">All Licenses</SelectItem>
@@ -327,7 +367,7 @@ const LicenseUsagePage = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Filter by Connection Status
                             </label>
-                            <Select value={selectedConnectionStatus} onValueChange={setSelectedConnectionStatus}>
+                            <Select value={selectedConnectionStatus} onValueChange={setSelectedConnectionStatus} disabled={loading}>
                                 <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
                                     <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
@@ -343,7 +383,7 @@ const LicenseUsagePage = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Filter by Last Usage
                             </label>
-                            <Select value={selectedLastUsage} onValueChange={setSelectedLastUsage}>
+                            <Select value={selectedLastUsage} onValueChange={setSelectedLastUsage} disabled={loading}>
                                 <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
                                     <SelectValue placeholder="Select usage range" />
                                 </SelectTrigger>
@@ -362,35 +402,19 @@ const LicenseUsagePage = () => {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className=" mt-7 w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
-                        <Button 
-                            variant="outline" 
-                            onClick={() => {setSearchTerm("");setSelectedLicense("all");setSelectedConnectionStatus("all");setSelectedLastUsage("all");}}
-                            className="w-auto"
-                        >
-                            Clear All Filters
-                        </Button>
+                        <div className="mt-7 w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
+                            <Button 
+                                variant="outline" 
+                                onClick={handleClearFilters}
+                                className="w-auto"
+                                disabled={loading}
+                            >
+                                Clear All Filters
+                            </Button>
+                        </div>
                     </div>
 
-                        
-                    </div>
-
-                    {/* <div className="mt-4">
-                        <Button 
-                            variant="outline" 
-                            onClick={() => {
-                                setSearchTerm("");
-                                setSelectedLicense("all");
-                                setSelectedConnectionStatus("all");
-                                setSelectedLastUsage("all");
-                            }}
-                            className="w-auto"
-                        >
-                            Clear All Filters
-                        </Button>
-                    </div> */}
-
-                    {(searchTerm || selectedLicense !== "all" || selectedConnectionStatus !== "all" || selectedLastUsage !== "all") && (
+                    {hasActiveFilters && (
                         <div className="mt-4 pt-4 border-t border-gray-200">
                             <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-sm font-medium text-gray-600">Active Filters:</span>
@@ -420,86 +444,123 @@ const LicenseUsagePage = () => {
                 </CardContent>
             </Card>
 
-            <div className="border border-gray-200 rounded-lg overflow-x-auto bg-white">
-                <table className="w-full min-w-max">
-                    <thead className="bg-gray-50">
-                        <tr className="border-b border-gray-200">
-                            <th className="text-left py-3 px-4 font-medium text-gray-700">Client ID</th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-700">Connection ID</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-700">Connection Status</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-700">Usage Credits</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-700">Last Used</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-700">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedConnections.length > 0 ? (
-                            paginatedConnections.map((conn, index) => (
-                                <tr key={`${conn.connectionId}-${index}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.clientId}</td>
-                                    <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.connectionId}</td>
-                                    <td className="py-3 px-4 text-center">
-                                        <Badge variant="outline" className={`capitalize ${conn.connectionStatus === 'ACTIVE' ? 'border-green-200 text-green-800 bg-green-100' : 'border-red-200 text-red-800 bg-red-100'}`}>
-                                            <Wifi className="w-3 h-3 mr-1.5" />
-                                            {conn.connectionStatus.replace('_', ' ').toLowerCase()}
-                                        </Badge>
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-gray-800 text-center">{calculateTotalCredits(conn.featureUsage)}</td>
-                                    <td className="py-3 px-4 text-sm text-gray-600 text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <Clock className={`w-4 h-4 ${getUsageCategory(conn.lastUsageDate) === 'recentUsage' ? 'text-green-500' : 'text-orange-500'}`} />
-                                            <span>{formatTimeAgo(conn.lastUsageDate)}</span>
-                                        </div>
-                                    </td>
-                                    <td className="py-3 px-4 text-center">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                                    <span className="sr-only">Open menu</span>
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem
-                                                    onClick={() => handleActionClick('start', conn)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    <PlayCircle className="mr-2 h-4 w-4 text-black" />
-                                                    <span className="text-black">Start</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={() => handleActionClick('stop', conn)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    <StopCircle className="mr-2 h-4 w-4 text-black" />
-                                                    <span className="text-black">Stop</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={() => handleActionClick('restart', conn)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    <RotateCcw className="mr-2 h-4 w-4 text-black" />
-                                                    <span className="text-black">Restart</span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+            {/* Error Display */}
+            {error && !loading && (
+                <Card className="mb-6 border-red-200 bg-red-50">
+                    <CardContent className="pt-6">
+                        <div className="flex items-center space-x-2 text-red-700">
+                            <XCircle className="w-5 h-5" />
+                            <span>{error}</span>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Loading Overlay */}
+            {loading && (
+                <Card className="mb-6">
+                    <CardContent className="pt-6">
+                        <div className="flex items-center justify-center space-x-2 text-gray-600">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span>Loading connections...</span>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Table - Only show when not loading */}
+            {!loading && (
+                <div className="border border-gray-200 rounded-lg overflow-x-auto bg-white">
+                    <table className="w-full min-w-max">
+                        <thead className="bg-gray-50">
+                            <tr className="border-b border-gray-200">
+                                <th className="text-left py-3 px-4 font-medium text-gray-700">Client ID</th>
+                                <th className="text-left py-3 px-4 font-medium text-gray-700">Connection ID</th>
+                                <th className="text-center py-3 px-4 font-medium text-gray-700">Connection Status</th>
+                                <th className="text-center py-3 px-4 font-medium text-gray-700">Usage Credits</th>
+                                <th className="text-center py-3 px-4 font-medium text-gray-700">Last Used</th>
+                                <th className="text-center py-3 px-4 font-medium text-gray-700">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {!error && paginatedConnections.length > 0 ? (
+                                paginatedConnections.map((conn, index) => (
+                                    <tr key={`${conn.connectionId}-${index}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                        <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.clientId}</td>
+                                        <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.connectionId}</td>
+                                        <td className="py-3 px-4 text-center">
+                                            <Badge variant="outline" className={`capitalize ${conn.connectionStatus === 'ACTIVE' ? 'border-green-200 text-green-800 bg-green-100' : 'border-red-200 text-red-800 bg-red-100'}`}>
+                                                <Wifi className="w-3 h-3 mr-1.5" />
+                                                {conn.connectionStatus.replace('_', ' ').toLowerCase()}
+                                            </Badge>
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-gray-800 text-center">{calculateTotalCredits(conn.featureUsage)}</td>
+                                        <td className="py-3 px-4 text-sm text-gray-600 text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Clock className={`w-4 h-4 ${getUsageCategory(conn.lastUsageDate) === 'recentUsage' ? 'text-green-500' : 'text-orange-500'}`} />
+                                                <span>{formatTimeAgo(conn.lastUsageDate)}</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-3 px-4 text-center">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                        <span className="sr-only">Open menu</span>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleActionClick('start', conn)}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        <PlayCircle className="mr-2 h-4 w-4 text-black" />
+                                                        <span className="text-black">Start</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleActionClick('stop', conn)}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        <StopCircle className="mr-2 h-4 w-4 text-black" />
+                                                        <span className="text-black">Stop</span>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleActionClick('restart', conn)}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        <RotateCcw className="mr-2 h-4 w-4 text-black" />
+                                                        <span className="text-black">Restart</span>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6} className="text-center py-16 text-gray-500">
+                                        <Network className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                        <p className="text-lg font-medium text-gray-600">{emptyState.title}</p>
+                                        <p className="text-sm">{emptyState.subtitle}</p>
+                                        {hasActiveFilters && !error && (
+                                            <Button 
+                                                variant="outline" 
+                                                onClick={handleClearFilters}
+                                                className="mt-4"
+                                            >
+                                                Clear All Filters
+                                            </Button>
+                                        )}
                                     </td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan={6} className="text-center py-16 text-gray-500">
-                                    <Network className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                    <p className="text-lg font-medium text-gray-600">{emptyState.title}</p>
-                                    <p className="text-sm">{emptyState.subtitle}</p>
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
-            {totalConnections > 0 && (
+            
+            {totalConnections > 0 && totalPages > 1 && !loading && !error && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <div className="text-sm text-gray-600">
                         Showing <strong>{(currentPage - 1) * recordsPerPage + 1}</strong> to <strong>{Math.min(currentPage * recordsPerPage, totalConnections)}</strong> of <strong>{totalConnections}</strong> connections
@@ -518,7 +579,7 @@ const LicenseUsagePage = () => {
                 </div>
             )}
 
-            {/* Confirmation Dialog */}
+          
             <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

@@ -90,7 +90,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
     
     try {
       const requestBody: LicenseRequestBody = {
-        orgId: "ORG12350",
+        orgId: "ORG17537870059048",
         page: page
       };
 
