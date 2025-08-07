@@ -90,7 +90,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
     
     try {
       const requestBody: LicenseRequestBody = {
-        orgId: "ORG12350",
+        orgId: "ORG17537870059048",
         page: page
       };
 
@@ -625,12 +625,12 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                     <div className="flex justify-between gap-4">
                       <div className="flex items-center space-x-2">
                         <Activity className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm text-gray-600">Last Activity:</span>
+                        <span className="text-sm text-black">Last Activity:</span>
                         <span className="text-sm font-bold text-gray-900">{formatDateTime(item.lastUsage)}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 ml-10">
                         <Calendar className="w-4 h-4 text-purple-500" />
-                        <span className="text-sm text-gray-600">Expires:</span>
+                        <span className="text-sm text-black">Expires:</span>
                         <div className="flex items-center space-x-1">
                           <span className="text-sm font-bold text-gray-900">{formatDate(item.endDate)}</span>
                           <span className={`text-sm font-bold px-2 py-1 rounded-full ${isExpired
