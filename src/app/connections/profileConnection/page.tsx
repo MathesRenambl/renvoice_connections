@@ -1,17 +1,14 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 import Container from "@/components/ui/container";
 import PageTitle from "@/components/ui/pageTitle";
 import { useAppContext } from "@/hooks/context";
-import { apiHeader } from "@/lib/utils";
 import { getFromLocalStorage } from "@/components/encryption/encryption";
-import { useRouter } from "next/navigation";
 import Alert from "@/components/alert/alert";
 import { useAlert } from "@/hooks/alertHook";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Lock, Edit3, Save, X, Eye, EyeOff } from "lucide-react";
+import { User, CreditCard, Edit3, Save, X, Coins, DollarSign, Bolt } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useLogOut } from "@/hooks/useLogout";
 
 interface UserProfile {
   firstName: string;
@@ -20,18 +17,16 @@ interface UserProfile {
   organization: string;
 }
 
-interface PasswordChangeData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
+interface BankDetails {
+  accountNumber: string;
+  ifscCode: string;
+  accountName: string;
+  bankName?: string;
 }
 
 const Page = () => {
   const { alert, showAlert, hideAlert } = useAlert();
   const { URL } = useAppContext();
-  const logOut = useLogOut();
-  const router = useRouter();
-//   const header = useMemo(() => apiHeader(), []);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<UserProfile | null>({
     firstName: "Gokul",
@@ -39,14 +34,16 @@ const Page = () => {
     email: "gokulTech@gt.com",
     organization: "Gokul Technology"
   });
-  const [isEditing, setIsEditing] = useState(false);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false
+  const [creditPoints, setCreditPoints] = useState<number>(1250); // Sample credit points
+  const [bankDetails, setBankDetails] = useState<BankDetails>({
+    accountNumber: "1234567890123456",
+    ifscCode: "HDFC0001234",
+    accountName: "Gokul Technology",
+    bankName: "HDFC Bank"
   });
+  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingBank, setIsEditingBank] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form states
   const [editForm, setEditForm] = useState<UserProfile>({
@@ -56,49 +53,20 @@ const Page = () => {
     organization: ""
   });
 
-  const [passwordForm, setPasswordForm] = useState<PasswordChangeData>({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: ""
+  const [bankForm, setBankForm] = useState<BankDetails>({
+    accountNumber: "",
+    ifscCode: "",
+    accountName: "",
+    bankName: ""
   });
 
   const [formErrors, setFormErrors] = useState<{
     firstName?: string;
     lastName?: string;
-    password?: string;
-    confirmPassword?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    accountName?: string;
   }>({});
-
-  useEffect(() => {
-    // const fetchProfile = async () => {
-    //   if (!header) {
-    //     logOut();
-    //     return;
-    //   }
-    //   const userId = getFromLocalStorage("userId"); // Assuming you store userId
-    //   try {
-    //     const response = await fetch(`${URL}/users/profile/${userId}`, {
-    //       method: "GET",
-    //       headers: header,
-    //     });
-    //     if (!response.ok) {
-    //       if (response.status === 401) {
-    //         logOut();
-    //       }
-    //       showAlert(`Server responded with ${response.status}: ${response.statusText}`, "error");
-    //       return;
-    //     }
-    //     const data: UserProfile = await response.json();
-    //     setUser(data);
-    //     setEditForm(data);
-    //   } catch (err: any) {
-    //     showAlert(err.message || "Something went wrong.", "error");
-    //   } finally {
-    //     setIsLoading(false);
-    //   }
-    // };
-    // fetchProfile();
-  }, []);
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
@@ -119,17 +87,23 @@ const Page = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const validatePasswordForm = () => {
+  const validateBankForm = () => {
     const errors: typeof formErrors = {};
     
-    if (!passwordForm.newPassword) {
-      errors.password = "New password is required";
-    } else if (passwordForm.newPassword.length < 8) {
-      errors.password = "Password must be at least 8 characters long";
+    if (!bankForm.accountNumber.trim()) {
+      errors.accountNumber = "Account number is required";
+    } else if (bankForm.accountNumber.length < 9 || bankForm.accountNumber.length > 18) {
+      errors.accountNumber = "Account number must be between 9-18 digits";
     }
     
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      errors.confirmPassword = "Passwords do not match";
+    if (!bankForm.ifscCode.trim()) {
+      errors.ifscCode = "IFSC code is required";
+    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankForm.ifscCode)) {
+      errors.ifscCode = "Invalid IFSC code format";
+    }
+
+    if (!bankForm.accountName.trim()) {
+      errors.accountName = "Account name is required";
     }
 
     setFormErrors(errors);
@@ -146,7 +120,6 @@ const Page = () => {
       const response = await fetch(`${URL}/users/profile/${userId}`, {
         method: "PUT",
         headers: {
-          ...header,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -170,38 +143,31 @@ const Page = () => {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!validatePasswordForm()) return;
+  const handleEditBankDetails = async () => {
+    if (!validateBankForm()) return;
 
     setIsSaving(true);
     const userId = getFromLocalStorage("userId");
     
     try {
-      const response = await fetch(`${URL}/users/change-password/${userId}`, {
+      const response = await fetch(`${URL}/users/bank-details/${userId}`, {
         method: "PUT",
         headers: {
-          ...header,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        }),
+        body: JSON.stringify(bankForm),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to change password: ${response.statusText}`);
+        throw new Error(`Failed to update bank details: ${response.statusText}`);
       }
 
-      setIsChangingPassword(false);
-      setPasswordForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: ""
-      });
-      showAlert("Password changed successfully!", "success");
+      const updatedBankDetails = await response.json();
+      setBankDetails(updatedBankDetails);
+      setIsEditingBank(false);
+      showAlert("Bank details updated successfully!", "success");
     } catch (err: any) {
-      showAlert(err.message || "Failed to change password", "error");
+      showAlert(err.message || "Failed to update bank details", "error");
     } finally {
       setIsSaving(false);
     }
@@ -213,26 +179,31 @@ const Page = () => {
     setFormErrors({});
   };
 
-  const cancelPasswordChange = () => {
-    setIsChangingPassword(false);
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: ""
-    });
+  const cancelBankEdit = () => {
+    setIsEditingBank(false);
+    setBankForm(bankDetails);
     setFormErrors({});
-    setShowPasswords({ current: false, new: false, confirm: false });
   };
 
-  const togglePasswordVisibility = (field: keyof typeof showPasswords) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
+  const startEditingProfile = () => {
+    setIsEditing(true);
+    setEditForm(user || { firstName: "", lastName: "", email: "", organization: "" });
+  };
+
+  const startEditingBank = () => {
+    setIsEditingBank(true);
+    setBankForm(bankDetails);
+  };
+
+  const maskAccountNumber = (accountNumber: string) => {
+    if (accountNumber.length <= 4) return accountNumber;
+    const lastFour = accountNumber.slice(-4);
+    const masked = '*'.repeat(accountNumber.length - 4);
+    return masked + lastFour;
   };
 
   return (
-    <div className="border border-gray-300 shadow-sm bg-transparent px-10 min-h-screen py-10">
+    <div className="border border-gray-300 shadow-sm bg-transparent px-10 min-h-screen py-10 rounded-md">
       <Container>
         <PageTitle title="Profile" description="Manage your account information" />
         {isLoading ? (
@@ -241,7 +212,7 @@ const Page = () => {
           user && (
             <div className="space-y-8">
               {/* Profile Header */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="bg-white rounded-2xl shadow-md p-8 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5">
                   <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center shadow-lg">
                     <span className="text-3xl font-extrabold text-white drop-shadow">
@@ -255,6 +226,20 @@ const Page = () => {
                     <p className="text-sm text-gray-500">{user.email}</p>
                     <p className="text-sm text-gray-400">{user.organization}</p>
                   </div>
+                </div>
+                
+                {/* Credit Points Display */}
+                <div className="bg-gradient-to-r from-gray-700 to-gray-800 rounded-xl p-4 text-white shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white bg-opacity-20 rounded-full p-2">
+                      <Coins className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium opacity-90">Credit Points</p>
+                      <p className="text-2xl font-bold">{creditPoints.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs opacity-80 mt-2">Use points to buy new connections</p>
                 </div>
               </div>
 
@@ -271,11 +256,11 @@ const Page = () => {
                         Profile Info
                       </TabsTrigger>
                       <TabsTrigger
-                        value="password"
+                        value="bank"
                         className="flex-1 py-2 rounded-md text-black data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-gray-200 transition"
                       >
-                        <Lock className="w-4 h-4 mr-2" />
-                        Change Password
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Bank Details
                       </TabsTrigger>
                     </TabsList>
 
@@ -286,7 +271,7 @@ const Page = () => {
                           <h3 className="text-lg font-semibold text-black">Personal Information</h3>
                           {!isEditing && (
                             <button
-                              onClick={() => setIsEditing(true)}
+                              onClick={startEditingProfile}
                               className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition"
                             >
                               <Edit3 className="w-4 h-4" />
@@ -370,116 +355,149 @@ const Page = () => {
                       </div>
                     </TabsContent>
 
-                    {/* Change Password Tab */}
-                    <TabsContent value="password" className="mt-6">
+                    {/* Bank Details Tab */}
+                    <TabsContent value="bank" className="mt-6">
                       <div className="space-y-6">
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-semibold text-black">Bank Details</h3>
-                          {!isChangingPassword && (
+                          <h3 className="text-lg font-semibold text-black">Bank Account Information</h3>
+                          {!isEditingBank && (
                             <button
-                              onClick={() => setIsChangingPassword(true)}
+                              onClick={startEditingBank}
                               className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-700 transition"
                             >
-                              <Lock className="w-4 h-4" />
-                              Bank Details
+                              <Edit3 className="w-4 h-4" />
+                              Edit Bank Details
                             </button>
                           )}
                         </div>
 
-                        {isChangingPassword ? (
-                          <div className="space-y-4 max-w-md">
-                            <div>
-                              <label className="text-sm font-medium text-black">Current Password</label>
-                              <div className="relative mt-1">
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="text-sm font-medium text-black">Account Number</label>
+                            {isEditingBank ? (
+                              <div>
                                 <input
-                                  type={showPasswords.current ? "text" : "password"}
-                                  value={passwordForm.currentPassword}
-                                  onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                                  className="w-full text-sm text-gray-900 bg-white border border-gray-300 p-3 pr-10 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                  placeholder="Enter current password"
+                                  type="text"
+                                  value={bankForm.accountNumber}
+                                  onChange={(e) => setBankForm(prev => ({ ...prev, accountNumber: e.target.value }))}
+                                  className="mt-1 w-full text-sm text-gray-900 bg-white border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                  placeholder="Enter account number"
                                 />
-                                <button
-                                  type="button"
-                                  onClick={() => togglePasswordVisibility('current')}
-                                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                >
-                                  {showPasswords.current ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-gray-400" />}
-                                </button>
+                                {formErrors.accountNumber && (
+                                  <p className="mt-1 text-sm text-red-600">{formErrors.accountNumber}</p>
+                                )}
                               </div>
-                            </div>
-
-                            <div>
-                              <label className="text-sm font-medium text-black">New Password</label>
-                              <div className="relative mt-1">
-                                <input
-                                  type={showPasswords.new ? "text" : "password"}
-                                  value={passwordForm.newPassword}
-                                  onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                                  className="w-full text-sm text-gray-900 bg-white border border-gray-300 p-3 pr-10 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                  placeholder="Enter new password"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => togglePasswordVisibility('new')}
-                                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                >
-                                  {showPasswords.new ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-gray-400" />}
-                                </button>
-                              </div>
-                              {formErrors.password && (
-                                <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
-                              )}
-                            </div>
-
-                            <div>
-                              <label className="text-sm font-medium text-black">Confirm New Password</label>
-                              <div className="relative mt-1">
-                                <input
-                                  type={showPasswords.confirm ? "text" : "password"}
-                                  value={passwordForm.confirmPassword}
-                                  onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                  className="w-full text-sm text-gray-900 bg-white border border-gray-300 p-3 pr-10 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                  placeholder="Re-enter new password"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => togglePasswordVisibility('confirm')}
-                                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                >
-                                  {showPasswords.confirm ? <EyeOff className="w-4 h-4 text-gray-400" /> : <Eye className="w-4 h-4 text-gray-400" />}
-                                </button>
-                              </div>
-                              {formErrors.confirmPassword && (
-                                <p className="mt-1 text-sm text-red-600">{formErrors.confirmPassword}</p>
-                              )}
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
-                              <button
-                                onClick={handleChangePassword}
-                                disabled={isSaving}
-                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition disabled:opacity-50"
-                              >
-                                <Save className="w-4 h-4" />
-                                {isSaving ? "Changing..." : "Change Password"}
-                              </button>
-                              <button
-                                onClick={cancelPasswordChange}
-                                disabled={isSaving}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50"
-                              >
-                                <X className="w-4 h-4" />
-                                Cancel
-                              </button>
-                            </div>
+                            ) : (
+                              <p className="mt-1 text-sm text-gray-900 bg-gray-200 p-3 rounded-md font-mono">
+                                {maskAccountNumber(bankDetails.accountNumber)}
+                              </p>
+                            )}
                           </div>
-                        ) : (
-                          <div className="text-center py-10">
-                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                              <Lock className="h-6 w-6 text-gray-400" />
+
+                          <div>
+                            <label className="text-sm font-medium text-black">IFSC Code</label>
+                            {isEditingBank ? (
+                              <div>
+                                <input
+                                  type="text"
+                                  value={bankForm.ifscCode}
+                                  onChange={(e) => setBankForm(prev => ({ ...prev, ifscCode: e.target.value.toUpperCase() }))}
+                                  className="mt-1 w-full text-sm text-gray-900 bg-white border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                  placeholder="Enter IFSC code"
+                                />
+                                {formErrors.ifscCode && (
+                                  <p className="mt-1 text-sm text-red-600">{formErrors.ifscCode}</p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="mt-1 text-sm text-gray-900 bg-gray-200 p-3 rounded-md font-mono">
+                                {bankDetails.ifscCode}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium text-black">Account Name</label>
+                            {isEditingBank ? (
+                              <div>
+                                <input
+                                  type="text"
+                                  value={bankForm.accountName}
+                                  onChange={(e) => setBankForm(prev => ({ ...prev, accountName: e.target.value }))}
+                                  className="mt-1 w-full text-sm text-gray-900 bg-white border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                  placeholder="Enter account holder name"
+                                />
+                                {formErrors.accountName && (
+                                  <p className="mt-1 text-sm text-red-600">{formErrors.accountName}</p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="mt-1 text-sm text-gray-900 bg-gray-200 p-3 rounded-md">
+                                {bankDetails.accountName}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium text-black">Bank Name</label>
+                            {isEditingBank ? (
+                              <input
+                                type="text"
+                                value={bankForm.bankName}
+                                onChange={(e) => setBankForm(prev => ({ ...prev, bankName: e.target.value }))}
+                                className="mt-1 w-full text-sm text-gray-900 bg-white border border-gray-300 p-3 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Enter bank name (optional)"
+                              />
+                            ) : (
+                              <p className="mt-1 text-sm text-gray-900 bg-gray-200 p-3 rounded-md">
+                                {bankDetails.bankName || "Not specified"}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {isEditingBank && (
+                          <div className="flex gap-3 pt-4">
+                            <button
+                              onClick={handleEditBankDetails}
+                              disabled={isSaving}
+                              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition disabled:opacity-50"
+                            >
+                              <Save className="w-4 h-4" />
+                              {isSaving ? "Saving..." : "Save Bank Details"}
+                            </button>
+                            <button
+                              onClick={cancelBankEdit}
+                              disabled={isSaving}
+                              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50"
+                            >
+                              <X className="w-4 h-4" />
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+
+                        {!isEditingBank && (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0">
+                                <Bolt className="w-5 h-5 text-blue-600 mt-0.5" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium text-blue-900">About Credit Points</h4>
+                                <p className="text-sm text-blue-700 mt-1">
+                                  Your credit points can be used to purchase new connections on the platform. 
+                                  Each connection purchase will deduct points from your balance. You can buy more 
+                                  credit points through purchase them directly.
+                                </p>
+                                <div className="mt-3 flex items-center gap-2 text-sm">
+                                  <span className="text-blue-600 font-medium">Current Balance:</span>
+                                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-semibold">
+                                    {creditPoints.toLocaleString()} points
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <h3 className="mt-3 text-sm font-medium text-gray-900">Password Security</h3>
-                            <p className="mt-1 text-sm text-black">Keep your account secure by changing your password regularly.</p>
                           </div>
                         )}
                       </div>
@@ -497,4 +515,3 @@ const Page = () => {
 };
 
 export default Page;
-
