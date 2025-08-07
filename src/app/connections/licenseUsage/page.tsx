@@ -1,614 +1,569 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation"; 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Network, Search, Filter, ChevronLeft, ChevronRight, Calendar, Wifi, ArrowLeft, Clock } from "lucide-react";
+import { Network, Filter, ChevronLeft, ChevronRight, Clock, Wifi, RotateCcw, Square, Play, MoreHorizontal, PlayCircle, StopCircle } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
-// Sample license data with connections
-const licensesData = [
-    {
-        org_id: "ORG12345",
-        paymentId: "PAY123456",
-        clientId: "CLIENT56789",
-        licenseId: "LIC12345",
-        licenseName: "Premium Enterprise License",
-        startDate: "2024-01-15T00:00:00.000Z",
-        endDate: "2025-01-15T00:00:00.000Z",
-        usage: [],
-        connections: [
-            {
-                connectionId: "CONN98765",
-                clientId: "CLIENT56789",
-                status: "ACTIVE",
-                connectionStatus: "ACTIVE",
-                usage: [
-                    { start: "2024-08-01T09:00:00.000Z", end: "2024-08-01T10:30:00.000Z", sessionId: "SESSION001" },
-                    { start: "2024-08-01T14:00:00.000Z", end: "2024-08-01T15:45:00.000Z", sessionId: "SESSION002" }
-                ]
-            },
-            {
-                connectionId: "CONN98766",
-                clientId: "CLIENT56790",
-                status: "ACTIVE",
-                connectionStatus: "INACTIVE",
-                usage: [
-                    { start: "2024-08-01T11:00:00.000Z", end: "2024-08-01T12:15:00.000Z", sessionId: "SESSION003" }
-                ]
-            }
-        ],
-        overallUsage: "195",
-        lastUsage: "2025-08-01T11:15:00.000Z"
-    },
-    {
-        org_id: "ORG12346",
-        paymentId: "PAY123457",
-        clientId: "CLIENT56791",
-        licenseId: "LIC12346",
-        licenseName: "Standard Business License",
-        startDate: "2024-02-01T00:00:00.000Z",
-        endDate: "2025-02-01T00:00:00.000Z",
-        usage: [],
-        connections: [
-            {
-                connectionId: "CONN98767",
-                clientId: "CLIENT56791",
-                status: "ACTIVE",
-                connectionStatus: "ACTIVE",
-                usage: [
-                    { start: "2024-08-01T08:00:00.000Z", end: "2024-08-01T09:30:00.000Z", sessionId: "SESSION004" }
-                ]
-            },
-            {
-                connectionId: "CONN98768",
-                clientId: "CLIENT56792",
-                status: "INACTIVE",
-                connectionStatus: "INACTIVE",
-                usage: []
-            },
-            {
-                connectionId: "CONN98769",
-                clientId: "CLIENT56793",
-                status: "ACTIVE",
-                connectionStatus: "ACTIVE",
-                usage: [
-                    { start: "2024-08-01T10:00:00.000Z", end: "2024-08-01T11:45:00.000Z", sessionId: "SESSION005" },
-                    { start: "2024-08-01T16:00:00.000Z", end: "2024-08-01T17:30:00.000Z", sessionId: "SESSION006" }
-                ]
-            }
-        ],
-        overallUsage: "280",
-        lastUsage: "2024-07-31T14:30:00.000Z"
-    },
-    {
-        org_id: "ORG12347",
-        paymentId: "PAY123458",
-        clientId: "CLIENT56794",
-        licenseId: "LIC12347",
-        licenseName: "Basic Starter License",
-        startDate: "2024-03-10T00:00:00.000Z",
-        endDate: "2024-12-10T00:00:00.000Z",
-        usage: [],
-        connections: [
-            {
-                connectionId: "CONN98770",
-                clientId: "CLIENT56794",
-                status: "ACTIVE",
-                connectionStatus: "ACTIVE",
-                usage: [
-                    { start: "2024-08-01T13:00:00.000Z", end: "2024-08-01T14:00:00.000Z", sessionId: "SESSION007" }
-                ]
-            }
-        ],
-        overallUsage: "120",
-        lastUsage: "2024-07-30T16:45:00.000Z"
-    },
-    {
-        org_id: "ORG12348",
-        paymentId: "PAY123459",
-        clientId: "CLIENT56795",
-        licenseId: "LIC12348",
-        licenseName: "Professional License",
-        startDate: "2024-04-05T00:00:00.000Z",
-        endDate: "2025-04-05T00:00:00.000Z",
-        usage: [],
-        connections: [
-            {
-                connectionId: "CONN98771",
-                clientId: "CLIENT56795",
-                status: "ACTIVE",
-                connectionStatus: "ACTIVE",
-                usage: [
-                    { start: "2024-08-01T07:30:00.000Z", end: "2024-08-01T09:00:00.000Z", sessionId: "SESSION008" }
-                ]
-            },
-            {
-                connectionId: "CONN98772",
-                clientId: "CLIENT56796",
-                status: "ACTIVE",
-                connectionStatus: "INACTIVE",
-                usage: [
-                    { start: "2024-08-01T12:00:00.000Z", end: "2024-08-01T13:30:00.000Z", sessionId: "SESSION009" }
-                ]
-            },
-            {
-                connectionId: "CONN98773",
-                clientId: "CLIENT56797",
-                status: "INACTIVE",
-                connectionStatus: "INACTIVE",
-                usage: []
-            }
-        ],
-        overallUsage: "240",
-        lastUsage: "2024-07-29T10:20:00.000Z"
-    },
-    {
-        org_id: "ORG12349",
-        paymentId: "PAY123460",
-        clientId: "CLIENT56798",
-        licenseId: "LIC12349",
-        licenseName: "Enterprise Plus License",
-        startDate: "2024-05-20T00:00:00.000Z",
-        endDate: "2025-05-20T00:00:00.000Z",
-        usage: [],
-        connections: [
-            {
-                connectionId: "CONN98774",
-                clientId: "CLIENT56798",
-                status: "ACTIVE",
-                connectionStatus: "ACTIVE",
-                usage: [
-                    { start: "2024-08-01T06:00:00.000Z", end: "2024-08-01T08:00:00.000Z", sessionId: "SESSION010" },
-                    { start: "2024-08-01T15:00:00.000Z", end: "2024-08-01T17:00:00.000Z", sessionId: "SESSION011" }
-                ]
-            },
-            {
-                connectionId: "CONN98775",
-                clientId: "CLIENT56799",
-                status: "ACTIVE",
-                connectionStatus: "ACTIVE",
-                usage: [
-                    { start: "2024-08-01T09:30:00.000Z", end: "2024-08-01T11:00:00.000Z", sessionId: "SESSION012" }
-                ]
-            }
-        ],
-        overallUsage: "350",
-        lastUsage: "2024-08-01T18:15:00.000Z"
-    }
-];
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-const formatDateTime = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
-
-const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-};
-
-const formatTimeAgo = (date) => {
+const formatTimeAgo = (dateString) => {
+    if (!dateString) return "Never";
     const now = new Date();
-    const past = new Date(date);
-    const diffInMs = now - past;
+    const past = new Date(dateString);
+    const diffInSeconds = Math.floor((now - past) / 1000);
+
+    if (diffInSeconds < 5) return "just now";
     
-    const seconds = Math.floor(diffInMs / 1000);
-    const minutes = Math.floor(seconds / 60);
+    const minutes = Math.floor(diffInSeconds / 60);
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+
     const days = Math.floor(hours / 24);
-    
-    if (seconds < 60) {
-        return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
-    } else if (minutes < 60) {
-        return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-    } else if (hours < 24) {
-        return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    } else {
-        return `${days} day${days !== 1 ? 's' : ''} ago`;
-    }
+    return `${days} day${days > 1 ? 's' : ''} ago`;
 };
 
-const calculateUsageMinutes = (usage) => {
-    if (!usage || usage.length === 0) return 0;
-
-    return usage.reduce((total, session) => {
-        const start = new Date(session.start);
-        const end = new Date(session.end);
-        const diffMinutes = Math.round((end - start) / (1000 * 60));
-        return total + diffMinutes;
-    }, 0);
+const calculateTotalCredits = (featureUsage) => {
+    if (!featureUsage || !Array.isArray(featureUsage)) return 0;
+    return featureUsage.reduce((total, feature) => total + (feature.usedCredits || 0), 0);
 };
 
-// Helper function to determine if usage is recent or older
 const getUsageCategory = (lastUsageDate) => {
+    if (!lastUsageDate) return 'oldUsage';
     const now = new Date();
     const lastUsage = new Date(lastUsageDate);
-    const diffInDays = Math.floor((now - lastUsage) / (1000 * 60 * 60 * 24));
-    
-    // Consider usage within 7 days as "recent", older than 7 days as "older"
-    return diffInDays <= 7 ? 'recent' : 'older';
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    return (now - lastUsage) <= sevenDaysInMs ? 'recentUsage' : 'oldUsage';
 };
 
 const LicenseUsagePage = () => {
-    const router = useRouter();
-    const searchParams = useSearchParams(); // For Next.js 13+ App Router
-    // const router = useRouter(); // For Next.js 12 Pages Router - use router.query.licenseId
+    const [licenses, setLicenses] = useState([]);
+    const [connections, setConnections] = useState([]);
+    const [totalConnections, setTotalConnections] = useState(0);
+    const [uniqueLicenseIds, setUniqueLicenseIds] = useState([]);
+    const [licenseIdsLoaded, setLicenseIdsLoaded] = useState(false);
     
     const [selectedLicense, setSelectedLicense] = useState("all");
     const [selectedConnectionStatus, setSelectedConnectionStatus] = useState("all");
     const [selectedLastUsage, setSelectedLastUsage] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [editingLicense, setEditingLicense] = useState(null);
-    const [licensesState, setLicensesState] = useState(licensesData);
+
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [selectedAction, setSelectedAction] = useState(null);
+    const [selectedConnection, setSelectedConnection] = useState(null);
+    
     const recordsPerPage = 10;
+    
+    const ORG_ID = "ORG17537870059048";
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjcxMzB9.Eq2LRxmI9-m5LBhlHAKomP9ZUQVSsxoapr-xxoEuhOE";
 
-    // Handle URL parameters on component mount
-    useEffect(() => {
-        // For Next.js 13+ App Router
-        const licenseIdFromUrl = searchParams.get('licenseId');
-        
-        // For Next.js 12 Pages Router, use:
-        // const licenseIdFromUrl = router.query.licenseId;
-        
-        if (licenseIdFromUrl) {
-            setSelectedLicense(licenseIdFromUrl);
-            // Optionally set the search term to the license ID as well
-            setSearchTerm(licenseIdFromUrl);
-        }
-    }, [searchParams]); // For Next.js 12, use [router.query]
 
-    // Navigate back to dashboard
-   
+    // Load only license IDs initially
+    const fetchLicenseIds = async () => {
+        try {
+            const payload = {
+                orgId: ORG_ID,
+                includeLicenseIds: true,
+            };
 
-    // Flatten all connections from all licenses for the table
-    const allConnections = useMemo(() => {
-        const connections = [];
-        licensesState.forEach(license => {
-            license.connections.forEach(connection => {
-                connections.push({
-                    ...connection,
-                    licenseId: license.licenseId,
-                    licenseName: license.licenseName,
-                    licenseEndDate: license.endDate,
-                    lastUsage: license.lastUsage,
-                    overallUsage: calculateUsageMinutes(connection.usage),
-                    usageCategory: getUsageCategory(license.lastUsage)
-                });
+            const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify(payload),
             });
-        });
-        return connections;
-    }, [licensesState]);
-
-    // Filter connections based on selected license and search term
-    const filteredConnections = useMemo(() => {
-        let filtered = allConnections;
-
-        // Filter by selected license
-        if (selectedLicense !== "all") {
-            filtered = filtered.filter(connection => connection.licenseId === selectedLicense);
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+            const result = await response.json();
+            
+            if (result.Success && result.Success.licenseIds) {
+                setUniqueLicenseIds(result.Success.licenseIds);
+                setLicenseIdsLoaded(true);
+            } else {
+                console.error("API returned an error:", result.Error || "Unknown error");
+                setUniqueLicenseIds([]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch license IDs:", error);
+            setUniqueLicenseIds([]);
         }
+    };
 
-        // Filter by connection status
-        if (selectedConnectionStatus !== "all") {
-            filtered = filtered.filter(connection => connection.connectionStatus === selectedConnectionStatus);
+
+    // Fetch connections based on selected filters
+    const fetchLicenses = async () => {
+        try {
+            const payload = {
+                orgId: ORG_ID,
+                page: currentPage,
+                limit: recordsPerPage,
+            };
+            
+            if (selectedLicense !== "all") {
+                payload.licenseId = selectedLicense;
+            }
+            if (selectedConnectionStatus !== "all") {
+                payload.connectionStatus = selectedConnectionStatus;
+            }
+            if (selectedLastUsage !== "all") {
+                payload.lastUsageFilter = selectedLastUsage;
+            }
+
+            const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify(payload),
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+            const result = await response.json();
+            console.log("API Response:", result);
+            
+            if (result.Success) {
+                const responseData = result.Success;
+                const licensesData = Array.isArray(responseData.data) ? responseData.data : [];
+                
+                setLicenses(licensesData);
+                
+                const allConnections = [];
+                licensesData.forEach(license => {
+                    if (license.connections && Array.isArray(license.connections)) {
+                        license.connections.forEach(connection => {
+                            allConnections.push({
+                                ...connection,
+                                licenseId: license.licenseId,
+                                licenseName: license.licenseName,
+                                orgId: license.orgId,
+                                paymentId: license.paymentId,
+                                startDate: license.startDate,
+                                endDate: license.endDate
+                            });
+                        });
+                    }
+                });
+                
+                console.log("Frontend - Connection statuses in response:", 
+                    [...new Set(allConnections.map(conn => conn.connectionStatus))]);
+                console.log("Frontend - All connections:", allConnections);
+                
+                setConnections(allConnections);
+                
+                // Use the total from API response
+                const actualTotal = responseData.total || allConnections.length;
+                setTotalConnections(actualTotal);
+                
+            } else {
+                console.error("API returned an error:", result.Error || "Unknown error");
+                setLicenses([]);
+                setConnections([]);
+                setTotalConnections(0);
+            }
+        } catch (error) {
+            console.error("Failed to fetch licenses:", error);
+            setLicenses([]);
+            setConnections([]);
+            setTotalConnections(0);
         }
+    };
 
-        // Filter by last usage category
-        if (selectedLastUsage !== "all") {
-            filtered = filtered.filter(connection => connection.usageCategory === selectedLastUsage);
+
+    // Load license IDs on component mount
+    useEffect(() => {
+        fetchLicenseIds();
+    }, []);
+
+    // Fetch connections only when a specific license is selected or filters change
+    useEffect(() => {
+        if (licenseIdsLoaded && selectedLicense !== "all") {
+            fetchLicenses();
+        } else if (selectedLicense === "all") {
+            // Clear connections when "All Licenses" is selected
+            setConnections([]);
+            setTotalConnections(0);
+            setLicenses([]);
         }
-
-        // Filter by search term
-        if (searchTerm) {
-            filtered = filtered.filter(connection =>
-                connection.clientId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                connection.connectionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                connection.licenseId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                connection.licenseName.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        return filtered;
-    }, [allConnections, selectedLicense, selectedConnectionStatus, selectedLastUsage, searchTerm]);
-
-    // Get selected license details for display
-    const selectedLicenseDetails = useMemo(() => {
-        if (selectedLicense === "all") return null;
-        return licensesState.find(license => license.licenseId === selectedLicense);
-    }, [selectedLicense, licensesState]);
-
-    // Pagination
-    const totalPages = Math.ceil(filteredConnections.length / recordsPerPage);
-    const startIndex = (currentPage - 1) * recordsPerPage;
-    const paginatedConnections = filteredConnections.slice(startIndex, startIndex + recordsPerPage);
-
-    // Reset to page 1 when filters change
-    React.useEffect(() => {
+    }, [selectedLicense, selectedConnectionStatus, selectedLastUsage, currentPage, licenseIdsLoaded]);
+    
+    // Reset page when filters change
+    useEffect(() => {
         setCurrentPage(1);
-    }, [selectedLicense, selectedConnectionStatus, selectedLastUsage, searchTerm]);
+    }, [selectedLicense, selectedConnectionStatus, selectedLastUsage]);
 
-    // Handle license name edit
-    const handleLicenseNameEdit = (licenseId, newName) => {
-        setLicensesState(prev =>
-            prev.map(license =>
-                license.licenseId === licenseId
-                    ? { ...license, licenseName: newName }
-                    : license
-            )
-        );
-        setEditingLicense(null);
+
+    const handleActionClick = (action, connection) => {
+        setSelectedAction(action);
+        setSelectedConnection(connection);
+        setShowConfirmDialog(true);
     };
 
-    // Handle license name click
-    const handleLicenseNameClick = (licenseId) => {
-        setEditingLicense(licenseId);
+    const handleConfirmAction = async () => {
+        console.log(`Performing ${selectedAction} on connection:`, selectedConnection.connectionId);
+        
+        // Here you would make the API call to perform the action
+        try {
+            // Example API call structure
+            // const response = await fetch(`http://192.168.1.31:8000/connection/${selectedAction}`, {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //         'Authorization': `Bearer ${token}`
+            //     },
+            //     body: JSON.stringify({
+            //         connectionId: selectedConnection.connectionId,
+            //         licenseId: selectedConnection.licenseId
+            //     })
+            // });
+            
+            // For demo purposes, just show success
+            alert(`${selectedAction} action completed for connection ${selectedConnection.connectionId}`);
+            
+        } catch (error) {
+            console.error(`Failed to ${selectedAction} connection:`, error);
+            alert(`Failed to ${selectedAction} connection. Please try again.`);
+        }
+        
+        setShowConfirmDialog(false);
+        setSelectedAction(null);
+        setSelectedConnection(null);
     };
 
-    // Handle license name key press
-    const handleLicenseNameKeyPress = (e, licenseId, currentName) => {
-        if (e.key === 'Enter') {
-            handleLicenseNameEdit(licenseId, e.target.value);
-        } else if (e.key === 'Escape') {
-            setEditingLicense(null);
+    const getActionIcon = (action) => {
+        switch (action) {
+            case 'start': return <PlayCircle className="w-4 h-4" />;
+            case 'stop': return <StopCircle className="w-4 h-4" />;
+            case 'restart': return <RotateCcw className="w-4 h-4" />;
+            default: return null;
         }
     };
+
+    const getActionColor = (action) => {
+        switch (action) {
+            case 'start': return 'text-green-600';
+            case 'stop': return 'text-red-600';
+            case 'restart': return 'text-orange-600';
+            default: return 'text-gray-600';
+        }
+    };
+
+    // Apply search filter to connections (this is frontend-only filtering)
+    const paginatedConnections = useMemo(() => {
+        if (!searchTerm) return connections;
+        
+        return connections.filter(connection =>
+            (connection.clientId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (connection.connectionId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (connection.licenseId?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+        );
+    }, [connections, searchTerm]);
+
+    const totalPages = Math.ceil(totalConnections / recordsPerPage);
+
+    // Determine what message to show when no connections
+    const getEmptyStateMessage = () => {
+        if (selectedLicense === "all") {
+            return {
+                title: "Select a License",
+                subtitle: "Please select a specific license from the dropdown to view its connections."
+            };
+        } else {
+            return {
+                title: "No Connections Found",
+                subtitle: "Try adjusting your search or filter criteria."
+            };
+        }
+    };
+
+    const emptyState = getEmptyStateMessage();
+
+    
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="border-b border-gray-200 pb-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">License Usage Management</h1>
-                        <p className="text-gray-600 mt-1">
-                            Monitor and manage license usage across all connections
-                        </p>
+                <h1 className="text-3xl font-bold text-gray-900">License Usage Management</h1>
+                <p className="text-gray-600 mt-1">Monitor and manage license usage across all connections.</p>
+            </div>
+
+            <Card className="mb-6">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Filter className="w-5 h-5" />
+                        Search and Filters
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Filter by License
+                            </label>
+                            <Select value={selectedLicense} onValueChange={setSelectedLicense}>
+                                <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
+                                    <SelectValue placeholder={!licenseIdsLoaded ? "Loading..." : "Select license"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Licenses</SelectItem>
+                                    {uniqueLicenseIds.map(id => (
+                                        <SelectItem key={id} value={id}>{id}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Filter by Connection Status
+                            </label>
+                            <Select value={selectedConnectionStatus} onValueChange={setSelectedConnectionStatus}>
+                                <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
+                                    <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Statuses</SelectItem>
+                                    <SelectItem value="ACTIVE">Active</SelectItem>
+                                    <SelectItem value="IN_ACTIVE">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Filter by Last Usage
+                            </label>
+                            <Select value={selectedLastUsage} onValueChange={setSelectedLastUsage}>
+                                <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
+                                    <SelectValue placeholder="Select usage range" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Usage</SelectItem>
+                                    <SelectItem value="recentUsage">
+                                        <div className="flex items-center">
+                                            <Clock className="w-4 h-4 mr-2 text-green-500" /> Recent (≤7 days)
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="oldUsage">
+                                        <div className="flex items-center">
+                                            <Clock className="w-4 h-4 mr-2 text-orange-500" /> Older (>7 days) 
+                                        </div>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className=" mt-7 w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
+                        <Button 
+                            variant="outline" 
+                            onClick={() => {setSearchTerm("");setSelectedLicense("all");setSelectedConnectionStatus("all");setSelectedLastUsage("all");}}
+                            className="w-auto"
+                        >
+                            Clear All Filters
+                        </Button>
                     </div>
-                </div>
-            </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Filter by License
-                    </label>
-                    <Select value={selectedLicense} onValueChange={setSelectedLicense}>
-                        <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
-                            <SelectValue placeholder="Select a license" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Licenses</SelectItem>
-                            {licensesState.map(license => (
-                                <SelectItem key={license.licenseId} value={license.licenseId}>
-                                    {license.licenseId}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Filter by Connection Status
-                    </label>
-                    <Select value={selectedConnectionStatus} onValueChange={setSelectedConnectionStatus}>
-                        <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
-                            <SelectValue placeholder="Select connection status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="ACTIVE">Active</SelectItem>
-                            <SelectItem value="INACTIVE">Inactive</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Filter by Last Usage
-                    </label>
-                    <Select value={selectedLastUsage} onValueChange={setSelectedLastUsage}>
-                        <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
-                            <SelectValue placeholder="Select usage period" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Usage</SelectItem>
-                            <SelectItem value="recent">
-                                <div className="flex items-center">
-                                    <Clock className="w-4 h-4 mr-2 text-green-500" />
-                                    Recent Usage (≤7 days)
-                                </div>
-                            </SelectItem>
-                            <SelectItem value="older">
-                                <div className="flex items-center">
-                                    <Clock className="w-4 h-4 mr-2 text-orange-500" />
-                                    Older Usage (>7 days)
-                                </div>
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Search
-                    </label>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                            placeholder="Search Client ID, Connection ID, or License ID"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 border-gray-300 focus:border-gray-500 focus:ring-gray-500"
-                        />
+                        
                     </div>
-                </div>
-            </div>
 
-            {/* Results Summary */}
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-                <div className="flex gap-2 items-center">
-                    <Filter className="h-4 w-4 text-gray-400" />
-                    <span>
-                        Showing {filteredConnections.length} connection{filteredConnections.length !== 1 ? 's' : ''}
-                        {selectedLicense !== "all" && (
-                            <span className="ml-1">
-                                for {selectedLicense}
-                            </span>
-                        )}
-                        {selectedConnectionStatus !== "all" && (
-                            <span className="ml-1">
-                                with {selectedConnectionStatus.toLowerCase()} status
-                            </span>
-                        )}
-                        {selectedLastUsage !== "all" && (
-                            <span className="ml-1">
-                                with {selectedLastUsage} usage
-                            </span>
-                        )}
-                        {selectedLicenseDetails && (
-                            <span className="ml-2 text-blue-600 font-medium">
-                                • License expires on {formatDate(selectedLicenseDetails.endDate)}
-                            </span>
-                        )}
-                    </span>
-                </div>
-            </div>
+                    {/* <div className="mt-4">
+                        <Button 
+                            variant="outline" 
+                            onClick={() => {
+                                setSearchTerm("");
+                                setSelectedLicense("all");
+                                setSelectedConnectionStatus("all");
+                                setSelectedLastUsage("all");
+                            }}
+                            className="w-auto"
+                        >
+                            Clear All Filters
+                        </Button>
+                    </div> */}
 
-            {/* Table */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-                <table className="w-full">
+                    {(searchTerm || selectedLicense !== "all" || selectedConnectionStatus !== "all" || selectedLastUsage !== "all") && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-medium text-gray-600">Active Filters:</span>
+                                {searchTerm && (
+                                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                        Search: "{searchTerm}"
+                                    </Badge>
+                                )}
+                                {selectedLicense !== "all" && (
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                        License: {selectedLicense}
+                                    </Badge>
+                                )}
+                                {selectedConnectionStatus !== "all" && (
+                                    <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                                        Status: {selectedConnectionStatus}
+                                    </Badge>
+                                )}
+                                {selectedLastUsage !== "all" && (
+                                    <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                                        Usage: {selectedLastUsage === "recentUsage" ? "Recent (≤7 days)" : "Older (>7 days) / Never Used"}
+                                    </Badge>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <div className="border border-gray-200 rounded-lg overflow-x-auto bg-white">
+                <table className="w-full min-w-max">
                     <thead className="bg-gray-50">
                         <tr className="border-b border-gray-200">
-                            <th className="text-center py-3 px-4 font-medium text-gray-900">Client ID</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-900">Connection ID</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-900">Connection Status</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-900">Overall Usage</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-900">Last Usage</th>
-                            {/* <th className="text-center py-3 px-4 font-medium text-gray-900">License End Date</th> */}
-                            <th className="text-center py-3 px-4 font-medium text-gray-900">License</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Client ID</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Connection ID</th>
+                            <th className="text-center py-3 px-4 font-medium text-gray-700">Connection Status</th>
+                            <th className="text-center py-3 px-4 font-medium text-gray-700">Usage Credits</th>
+                            <th className="text-center py-3 px-4 font-medium text-gray-700">Last Used</th>
+                            <th className="text-center py-3 px-4 font-medium text-gray-700">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white text-center">
-                        {paginatedConnections.map((connection, index) => (
-                            <tr
-                                key={`${connection.licenseId}-${connection.connectionId}`}
-                                className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
-                            >
-                                <td className="py-3 px-4 text-center">
-                                    <div className="text-sm text-black">{connection.clientId}</div>
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                    <div className="text-sm text-black">{connection.connectionId}</div>
-                                </td>
-                                <td className="py-3 px-4">
-                                    <Badge
-                                        variant="outline"
-                                        className={`${connection.connectionStatus === 'ACTIVE'
-                                            ? 'border-green-300 text-gray-700 bg-green-200'
-                                            : 'border-red-300 text-red-500 bg-red-200'
-                                            }`}
-                                    >
-                                        <Wifi className="w-3 h-3 mr-1" />
-                                        {connection.connectionStatus}
-                                    </Badge>
-                                </td>
-                                <td className="py-3 px-4 text-black text-sm">
-                                    {connection.overallUsage} Credits
-                                </td>
-                                <td className="py-3 px-4 text-black text-sm">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Clock className={`w-3 h-3 ${connection.usageCategory === 'recent' ? 'text-green-500' : 'text-orange-500'}`} />
-                                        <span>{formatTimeAgo(connection.lastUsage)}</span>
-                                    </div>
-                                </td>
-                                {/* <td className="py-3 px-4 text-black text-sm">
-                                    {formatDate(connection.licenseEndDate)}
-                                </td> */}
-                                <td className="py-3 px-4 text-black text-sm">
-                                    <div className="text-xs text-gray-500">{connection.licenseId}</div>
-                                    <div className="text-sm font-medium">
-                                        {editingLicense === connection.licenseId ? (
-                                            <Input
-                                                defaultValue={connection.licenseName}
-                                                autoFocus
-                                                onBlur={(e) => handleLicenseNameEdit(connection.licenseId, e.target.value)}
-                                                onKeyDown={(e) => handleLicenseNameKeyPress(e, connection.licenseId, connection.licenseName)}
-                                                className="h-6 text-sm py-0 px-1 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                                            />
-                                        ) : (
-                                            <span
-                                                onClick={() => handleLicenseNameClick(connection.licenseId)}
-                                                className="cursor-pointer hover:text-blue-600 hover:underline"
-                                                title="Click to edit license name"
-                                            >
-                                                {connection.licenseName}
-                                            </span>
-                                        )}
-                                    </div>
+                    <tbody>
+                        {paginatedConnections.length > 0 ? (
+                            paginatedConnections.map((conn, index) => (
+                                <tr key={`${conn.connectionId}-${index}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                    <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.clientId}</td>
+                                    <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.connectionId}</td>
+                                    <td className="py-3 px-4 text-center">
+                                        <Badge variant="outline" className={`capitalize ${conn.connectionStatus === 'ACTIVE' ? 'border-green-200 text-green-800 bg-green-100' : 'border-red-200 text-red-800 bg-red-100'}`}>
+                                            <Wifi className="w-3 h-3 mr-1.5" />
+                                            {conn.connectionStatus.replace('_', ' ').toLowerCase()}
+                                        </Badge>
+                                    </td>
+                                    <td className="py-3 px-4 text-sm text-gray-800 text-center">{calculateTotalCredits(conn.featureUsage)}</td>
+                                    <td className="py-3 px-4 text-sm text-gray-600 text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Clock className={`w-4 h-4 ${getUsageCategory(conn.lastUsageDate) === 'recentUsage' ? 'text-green-500' : 'text-orange-500'}`} />
+                                            <span>{formatTimeAgo(conn.lastUsageDate)}</span>
+                                        </div>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem
+                                                    onClick={() => handleActionClick('start', conn)}
+                                                    className="cursor-pointer"
+                                                >
+                                                    <PlayCircle className="mr-2 h-4 w-4 text-black" />
+                                                    <span className="text-black">Start</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => handleActionClick('stop', conn)}
+                                                    className="cursor-pointer"
+                                                >
+                                                    <StopCircle className="mr-2 h-4 w-4 text-black" />
+                                                    <span className="text-black">Stop</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => handleActionClick('restart', conn)}
+                                                    className="cursor-pointer"
+                                                >
+                                                    <RotateCcw className="mr-2 h-4 w-4 text-black" />
+                                                    <span className="text-black">Restart</span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={6} className="text-center py-16 text-gray-500">
+                                    <Network className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                    <p className="text-lg font-medium text-gray-600">{emptyState.title}</p>
+                                    <p className="text-sm">{emptyState.subtitle}</p>
                                 </td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </table>
             </div>
 
-            {/* Pagination */}
-            {filteredConnections.length > 0 && (
-                <div className="flex items-center justify-between mt-6 pt-4 border-t">
+            {totalConnections > 0 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <div className="text-sm text-gray-600">
-                        Showing {startIndex + 1} to {Math.min(startIndex + recordsPerPage, filteredConnections.length)} of {filteredConnections.length} connections
+                        Showing <strong>{(currentPage - 1) * recordsPerPage + 1}</strong> to <strong>{Math.min(currentPage * recordsPerPage, totalConnections)}</strong> of <strong>{totalConnections}</strong> connections
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
-                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                            Previous
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
+                            <ChevronLeft className="w-4 h-4 mr-1" /> Previous
                         </Button>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-700 font-medium">
                             Page {currentPage} of {totalPages}
                         </span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                            disabled={currentPage === totalPages}
-                            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                        >
-                            Next
-                            <ChevronRight className="w-4 h-4" />
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>
+                            Next <ChevronRight className="w-4 h-4 ml-1" />
                         </Button>
                     </div>
                 </div>
             )}
 
-            {/* Empty State */}
-            {filteredConnections.length === 0 && (
-                <div className="text-center py-12 text-gray-500 bg-white rounded-lg border border-gray-200">
-                    <Network className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p className="text-lg font-medium mb-2 text-gray-600">No connections found</p>
-                    <p className="text-sm text-gray-500">Try adjusting your search or filter criteria</p>
-                </div>
-            )}
+            {/* Confirmation Dialog */}
+            <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                            {selectedAction && getActionIcon(selectedAction)}
+                            <span className={getActionColor(selectedAction)}>
+                                Confirm {selectedAction?.charAt(0).toUpperCase() + selectedAction?.slice(1)} Action
+                            </span>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to <strong>{selectedAction}</strong> the connection <strong>{selectedConnection?.connectionId}</strong>?
+                            {selectedAction === 'stop' && (
+                                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+                                    <strong>Warning:</strong> This will immediately terminate the connection and may interrupt ongoing operations.
+                                </div>
+                            )}
+                            {selectedAction === 'restart' && (
+                                <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-orange-800 text-sm">
+                                    <strong>Note:</strong> This will stop and then start the connection. There may be a brief interruption.
+                                </div>
+                            )}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmAction}
+                            className={`${
+                                selectedAction === 'start' ? 'bg-green-600 hover:bg-green-700' :
+                                selectedAction === 'stop' ? 'bg-red-600 hover:bg-red-700' :
+                                selectedAction === 'restart' ? 'bg-orange-600 hover:bg-orange-700' :
+                                'bg-gray-600 hover:bg-gray-700'
+                            }`}
+                        >
+                            {selectedAction === 'start' && <Play className="w-4 h-4 mr-1" />}
+                            {selectedAction === 'stop' && <Square className="w-4 h-4 mr-1" />}
+                            {selectedAction === 'restart' && <RotateCcw className="w-4 h-4 mr-1" />}
+                            Confirm {selectedAction?.charAt(0).toUpperCase() + selectedAction?.slice(1)}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
+
 };
 
 export default LicenseUsagePage;
