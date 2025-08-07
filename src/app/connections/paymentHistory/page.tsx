@@ -277,11 +277,11 @@ const PaymentHistory = () => {
         );
     };
 
-    const formatCurrency = (amount) => {
+    const formatCurrency = (money) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR'
-        }).format(amount || 0);
+        }).format(money || 0);
     };
 
     const formatDate = (date) => {
@@ -352,7 +352,7 @@ const PaymentHistory = () => {
                                 <SelectContent>
                                     <SelectItem value="all">All Payment Types</SelectItem>
                                     <SelectItem value="CREDIT">Credit</SelectItem>
-                                    <SelectItem value="AMOUNT">Amount</SelectItem>
+                                    <SelectItem value="MONEY">Money</SelectItem>
                                 </SelectContent>
                             </Select>
                            
@@ -481,7 +481,7 @@ const PaymentHistory = () => {
                                         <th className="py-3 px-4 font-medium text-gray-900">No of Connections</th>
                                         <th className="py-3 px-4 font-medium text-gray-900">Pay Date</th>
                                         <th className="py-3 px-4 font-medium text-gray-900">Payment Type</th>
-                                        <th className="py-3 px-4 font-medium text-gray-900">Amount</th>
+                                        <th className="py-3 px-4 font-medium text-gray-900">Price</th>
                                         <th className="py-3 px-4 font-medium text-gray-900">Status</th>
                                         <th className="py-3 px-4 font-medium text-gray-900">Invoice</th>
                                     </tr>
