@@ -50,17 +50,17 @@ const navigationData = {
       icon: Plug,
       type: "single"
     },
-    paymentHistory: {
-      title: "Payment History", 
-      href: "/connections/paymentHistory",
-      icon: CreditCard,
-      type: "single"
-    },
     paymentCredits: {
       title: "Purchase credits",
       href : "/connections/purchaseCredits",
       icon : Bolt,
       type:"single"
+    },
+    paymentHistory: {
+      title: "Payment History", 
+      href: "/connections/paymentHistory",
+      icon: CreditCard,
+      type: "single"
     },
 };
 

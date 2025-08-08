@@ -20,7 +20,7 @@ const LicenseUsageAnalytics = ({ licenses, onLicenseClick }) => {
     // Process data to extract usage information
     const processUsageData = () => {
         if (!licenses || !Array.isArray(licenses)) return [];
-        
+
         return licenses.map(license => ({
             licenseId: license.licenseId,
             usage: license.usedCredits || 0,
@@ -32,7 +32,11 @@ const LicenseUsageAnalytics = ({ licenses, onLicenseClick }) => {
     const chartData = processUsageData();
 
     // Custom tooltip
-    const CustomTooltip = ({ active, payload, label }) => {
+    const CustomTooltip = ({ active, payload, label }: {
+        active?: any;
+        payload?: any;
+        label?: any;
+    }) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
 
@@ -191,8 +195,8 @@ const ConnectionsDashboard = () => {
             try {
                 setLoading(true);
                 setError(null);
-                
-                const res = await fetch("http://127.0.0.1:8000/license/getOrgDashboard", {
+
+                const res = await fetch("http://192.168.1.11:8000/license/getOrgDashboard", {
                     method: "POST",
                     headers: {
                         "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
@@ -246,7 +250,7 @@ const ConnectionsDashboard = () => {
                     </CardHeader>
                     <CardContent>
                         <p className="text-gray-600 mb-4">{error}</p>
-                        <button 
+                        <button
                             onClick={() => window.location.reload()}
                             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
@@ -369,9 +373,9 @@ const ConnectionsDashboard = () => {
                 </div>
 
                 {/* License Analytics Section */}
-                <LicenseUsageAnalytics 
-                    licenses={licenses} 
-                    onLicenseClick={handleLicenseClick} 
+                <LicenseUsageAnalytics
+                    licenses={licenses}
+                    onLicenseClick={handleLicenseClick}
                 />
             </div>
         </div>

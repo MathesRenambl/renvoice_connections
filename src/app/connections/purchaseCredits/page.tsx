@@ -6,16 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-    DialogClose,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, } from "@/components/ui/dialog";
 
 // Credit configuration
 const creditConfig = {
@@ -64,7 +55,7 @@ const creditConfig = {
 };
 
 const PurchaseCredits = () => {
-    const [selectedPackage, setSelectedPackage] = useState(null);
+    const [selectedPackage, setSelectedPackage] = useState(creditConfig.recommendations[1]);
     const [customAmount, setCustomAmount] = useState("");
     const [isCustomMode, setIsCustomMode] = useState(false);
 
@@ -113,6 +104,8 @@ const PurchaseCredits = () => {
 
     // Handle package selection
     const handlePackageSelect = (pkg) => {
+
+        console.log(pkg)
         setSelectedPackage(pkg);
         setIsCustomMode(false);
         setCustomAmount("");
@@ -349,9 +342,9 @@ const PurchaseCredits = () => {
                                         key={index}
                                         className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${
                                             isSelected 
-                                                ? 'ring-2 ring-blue-500 shadow-lg' 
+                                                ? 'ring-2 ring-gray-500 shadow-lg' 
                                                 : 'hover:ring-1 hover:ring-gray-300'
-                                        } ${pkg.popular ? 'border-blue-500' : ''}`}
+                                        } ${pkg.popular ? 'border-gray-500' : ''}`}
                                         onClick={() => handlePackageSelect(pkg)}
                                     >
                                         {pkg.popular && (
@@ -398,7 +391,7 @@ const PurchaseCredits = () => {
                                         
                                         {isSelected && (
                                             <div className="absolute top-4 right-4">
-                                                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                                                <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center">
                                                     <Check className="w-4 h-4 text-white" />
                                                 </div>
                                             </div>
@@ -463,7 +456,7 @@ const PurchaseCredits = () => {
                                     
                                     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                                         <DialogTrigger asChild>
-                                            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-lg">
+                                            <Button className="w-full bg-gray-800 hover:bg-gray-700 text-white h-12 text-lg">
                                                 Proceed to Checkout
                                             </Button>
                                         </DialogTrigger>
@@ -491,8 +484,8 @@ const PurchaseCredits = () => {
                     </h3>
                     <div className="grid md:grid-cols-3 gap-8">
                         <div className="text-center">
-                            <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                                <Zap className="w-8 h-8 text-blue-600" />
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                <Zap className="w-8 h-8 text-gray-800" />
                             </div>
                             <h4 className="font-semibold text-gray-900 mb-2">Instant Access</h4>
                             <p className="text-gray-600">
@@ -501,8 +494,8 @@ const PurchaseCredits = () => {
                         </div>
                         
                         <div className="text-center">
-                            <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                                <TrendingUp className="w-8 h-8 text-green-600" />
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                <TrendingUp className="w-8 h-8 text-gray-800" />
                             </div>
                             <h4 className="font-semibold text-gray-900 mb-2">Bonus Credits</h4>
                             <p className="text-gray-600">
@@ -511,8 +504,8 @@ const PurchaseCredits = () => {
                         </div>
                         
                         <div className="text-center">
-                            <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                                <Shield className="w-8 h-8 text-purple-600" />
+                            <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                <Shield className="w-8 h-8 text-gray-800" />
                             </div>
                             <h4 className="font-semibold text-gray-900 mb-2">Secure Payment</h4>
                             <p className="text-gray-600">

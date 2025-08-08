@@ -8,6 +8,24 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTitle from '@/components/ui/pageTitle';
 
+interface requestBody {
+    orgId : string,
+    page : number,
+    licenseId? : string,
+    paymentType? : string,
+    status? : string,
+    months? : string,
+    year? : string
+}
+
+interface filters {
+    searchTerm? : string,
+    paymentType? : string,
+    status? : string,
+    months? : string,
+    year? : string
+}
+
 const PaymentHistory = () => {
     const [paymentData, setPaymentData] = useState([]);
     const [yearsData, setYearsData] = useState([]);
@@ -29,7 +47,7 @@ const PaymentHistory = () => {
     const [error, setError] = useState(null);
 
     // API call function - Fixed to properly handle data clearing
-    const fetchLicenses = useCallback(async (page = 1, filters = {}) => {
+    const fetchLicenses = useCallback(async (page = 1, filters:filters = {}) => {
         setLoading(true);
         setError(null);
 
@@ -40,7 +58,7 @@ const PaymentHistory = () => {
         }
 
         try {
-            const requestBody = {
+            const requestBody:requestBody = {
                 orgId: "ORG12345",
                 page: page
             };
@@ -68,7 +86,7 @@ const PaymentHistory = () => {
 
             console.log("Request Body:", requestBody);
 
-            const response = await fetch('http://127.0.0.1:8000/payments/getPayment', {
+            const response = await fetch('http://192.168.1.11:8000/payments/getPayment', {
                 method: "POST",
                 headers: {
                     "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",

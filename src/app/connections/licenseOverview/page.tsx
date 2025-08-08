@@ -90,7 +90,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
     
     try {
       const requestBody: LicenseRequestBody = {
-        orgId: "ORG17537870059048",
+        orgId: "ORG12350",
         page: page
       };
 
@@ -128,7 +128,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
 
       console.log("Request Body:", requestBody);
 
-      const response = await fetch('http://127.0.0.1:8000/license/getLicenses', {
+      const response = await fetch('http://192.168.1.11:8000/license/getLicenses', {
         method: "POST",
         headers: {
           "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",

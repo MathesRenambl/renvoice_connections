@@ -10,10 +10,19 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-const formatTimeAgo = (dateString) => {
+interface payload {
+    orgId: string;
+    page: number;
+    limit: number;
+    licenseId?: string;
+    connectionStatus?: string;
+    lastUsageFilter?: string;
+}
+
+const formatTimeAgo = (dateString: any) => {
     if (!dateString) return "Never";
-    const now = new Date();
-    const past = new Date(dateString);
+    const now:any = new Date();
+    const past:any = new Date(dateString);
     const diffInSeconds = Math.floor((now - past) / 1000);
 
     if (diffInSeconds < 5) return "just now";
@@ -27,15 +36,15 @@ const formatTimeAgo = (dateString) => {
     return `${days} day${days > 1 ? 's' : ''} ago`;
 };
 
-const calculateTotalCredits = (featureUsage) => {
+const calculateTotalCredits = (featureUsage:any) => {
     if (!featureUsage || !Array.isArray(featureUsage)) return 0;
     return featureUsage.reduce((total, feature) => total + (feature.usedCredits || 0), 0);
 };
 
-const getUsageCategory = (lastUsageDate) => {
+const getUsageCategory = (lastUsageDate:any) => {
     if (!lastUsageDate) return 'oldUsage';
-    const now = new Date();
-    const lastUsage = new Date(lastUsageDate);
+    const now:any = new Date();
+    const lastUsage:any = new Date(lastUsageDate);
     const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
     return (now - lastUsage) <= sevenDaysInMs ? 'recentUsage' : 'oldUsage';
 };
@@ -75,7 +84,7 @@ const LicenseUsagePage = () => {
                 includeLicenseIds: true,
             };
 
-            const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
+            const response = await fetch('http://192.168.1.11:8000/connection/getConnection', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -120,7 +129,7 @@ const LicenseUsagePage = () => {
         setLicenses([]);
         
         try {
-            const payload = {
+            const payload:payload = {
                 orgId: ORG_ID,
                 page: currentPage,
                 limit: recordsPerPage,
@@ -396,7 +405,7 @@ const LicenseUsagePage = () => {
                                     </SelectItem>
                                     <SelectItem value="oldUsage">
                                         <div className="flex items-center">
-                                            <Clock className="w-4 h-4 mr-2 text-orange-500" /> Older (>7 days) 
+                                            <Clock className="w-4 h-4 mr-2 text-orange-500" /> Older ({">"}7 days) 
                                         </div>
                                     </SelectItem>
                                 </SelectContent>
@@ -593,12 +602,12 @@ const LicenseUsagePage = () => {
                             Are you sure you want to <strong>{selectedAction}</strong> the connection <strong>{selectedConnection?.connectionId}</strong>?
                             {selectedAction === 'stop' && (
                                 <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
-                                    <strong>Warning:</strong> This will immediately terminate the connection and may interrupt ongoing operations.
+                                    <strong>Warning:</strong> <p>This will immediately terminate the connection and may interrupt ongoing operations.</p>
                                 </div>
                             )}
                             {selectedAction === 'restart' && (
                                 <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-orange-800 text-sm">
-                                    <strong>Note:</strong> This will stop and then start the connection. There may be a brief interruption.
+                                    <strong>Note:</strong> <p>This will stop and then start the connection. There may be a brief interruption.</p>
                                 </div>
                             )}
                         </AlertDialogDescription>
