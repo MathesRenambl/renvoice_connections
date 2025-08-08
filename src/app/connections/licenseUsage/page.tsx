@@ -551,7 +551,7 @@ const LicenseUsagePage = () => {
                                         <Network className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                                         <p className="text-lg font-medium text-gray-600">{emptyState.title}</p>
                                         <p className="text-sm">{emptyState.subtitle}</p>
-                                        {hasActiveFilters && !error && (
+                                        {/* {hasActiveFilters && !error && (
                                             <Button 
                                                 variant="outline" 
                                                 onClick={handleClearFilters}
@@ -559,7 +559,7 @@ const LicenseUsagePage = () => {
                                             >
                                                 Clear All Filters
                                             </Button>
-                                        )}
+                                        )} */}
                                     </td>
                                 </tr>
                             )}
