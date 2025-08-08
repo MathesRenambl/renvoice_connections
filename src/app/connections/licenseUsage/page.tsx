@@ -84,7 +84,7 @@ const LicenseUsagePage = () => {
                 includeLicenseIds: true,
             };
 
-            const response = await fetch('http://192.168.1.11:8000/connection/getConnection', {
+            const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
