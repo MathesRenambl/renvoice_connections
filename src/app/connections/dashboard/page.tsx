@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Network, Calendar, Wifi, CheckCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 const formatDateTime = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -439,6 +440,7 @@ const ConnectionsDashboard = () => {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Link href="/connections/licenseOverview" className="block focus:outline-none focus:ring-2 focus:ring-blue-100 rounded-md">
                     <Card className="border-gray-200">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
@@ -457,6 +459,7 @@ const ConnectionsDashboard = () => {
                             </p>
                         </CardContent>
                     </Card>
+                    </Link>
 
                     <Card className="border-gray-200">
                         <CardHeader className="pb-3">

@@ -8,7 +8,7 @@ import { Network, Filter, ChevronLeft, ChevronRight, Clock, Wifi, RotateCcw, Squ
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface payload {
     orgId: string;
@@ -21,12 +21,12 @@ interface payload {
 
 const formatTimeAgo = (dateString: any) => {
     if (!dateString) return "Never";
-    const now:any = new Date();
-    const past:any = new Date(dateString);
+    const now: any = new Date();
+    const past: any = new Date(dateString);
     const diffInSeconds = Math.floor((now - past) / 1000);
 
     if (diffInSeconds < 5) return "just now";
-    
+
     const minutes = Math.floor(diffInSeconds / 60);
     if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     const hours = Math.floor(minutes / 60);
@@ -36,15 +36,15 @@ const formatTimeAgo = (dateString: any) => {
     return `${days} day${days > 1 ? 's' : ''} ago`;
 };
 
-const calculateTotalCredits = (featureUsage:any) => {
+const calculateTotalCredits = (featureUsage: any) => {
     if (!featureUsage || !Array.isArray(featureUsage)) return 0;
     return featureUsage.reduce((total, feature) => total + (feature.usedCredits || 0), 0);
 };
 
-const getUsageCategory = (lastUsageDate:any) => {
+const getUsageCategory = (lastUsageDate: any) => {
     if (!lastUsageDate) return 'oldUsage';
-    const now:any = new Date();
-    const lastUsage:any = new Date(lastUsageDate);
+    const now: any = new Date();
+    const lastUsage: any = new Date(lastUsageDate);
     const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
     return (now - lastUsage) <= sevenDaysInMs ? 'recentUsage' : 'oldUsage';
 };
@@ -52,7 +52,7 @@ const getUsageCategory = (lastUsageDate:any) => {
 const LicenseUsagePage = () => {
     const searchParams = useSearchParams();
     const licenseIdFromParams = searchParams.get('licenseId');
-    
+
     const [licenses, setLicenses] = useState([]);
     const [connections, setConnections] = useState([]);
     const [totalConnections, setTotalConnections] = useState(0);
@@ -60,7 +60,7 @@ const LicenseUsagePage = () => {
     const [licenseIdsLoaded, setLicenseIdsLoaded] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     const [selectedLicense, setSelectedLicense] = useState("all");
     const [selectedConnectionStatus, setSelectedConnectionStatus] = useState("all");
     const [selectedLastUsage, setSelectedLastUsage] = useState("all");
@@ -70,9 +70,9 @@ const LicenseUsagePage = () => {
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [selectedAction, setSelectedAction] = useState(null);
     const [selectedConnection, setSelectedConnection] = useState(null);
-    
+
     const recordsPerPage = 10;
-    
+
     const ORG_ID = "ORG17537870059048";
     const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjcxMzB9.Eq2LRxmI9-m5LBhlHAKomP9ZUQVSsxoapr-xxoEuhOE";
 
@@ -86,22 +86,22 @@ const LicenseUsagePage = () => {
 
             const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(payload),
             });
-            
+
             if (!response.ok) {
                 throw new Error(`API Error: ${response.status} ${response.statusText}`);
             }
             const result = await response.json();
-            
+
             if (result.Success && result.Success.licenseIds) {
                 setUniqueLicenseIds(result.Success.licenseIds);
                 setLicenseIdsLoaded(true);
-                
+
                 // Set license from URL parameter if it exists and is valid
                 if (licenseIdFromParams && result.Success.licenseIds.includes(licenseIdFromParams)) {
                     setSelectedLicense(licenseIdFromParams);
@@ -122,19 +122,19 @@ const LicenseUsagePage = () => {
     const fetchLicenses = async () => {
         setLoading(true);
         setError(null);
-        
-        
+
+
         setConnections([]);
         setTotalConnections(0);
         setLicenses([]);
-        
+
         try {
-            const payload:payload = {
+            const payload: payload = {
                 orgId: ORG_ID,
                 page: currentPage,
                 limit: recordsPerPage,
             };
-            
+
             if (selectedLicense !== "all") {
                 payload.licenseId = selectedLicense;
             }
@@ -147,25 +147,25 @@ const LicenseUsagePage = () => {
 
             const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(payload),
             });
-            
+
             if (!response.ok) {
                 throw new Error(`API Error: ${response.status} ${response.statusText}`);
             }
             const result = await response.json();
             console.log("API Response:", result);
-            
+
             if (result.Success) {
                 const responseData = result.Success;
                 const licensesData = Array.isArray(responseData.data) ? responseData.data : [];
-                
+
                 setLicenses(licensesData);
-                
+
                 const allConnections = [];
                 licensesData.forEach(license => {
                     if (license.connections && Array.isArray(license.connections)) {
@@ -182,26 +182,26 @@ const LicenseUsagePage = () => {
                         });
                     }
                 });
-                
-                console.log("Frontend - Connection statuses in response:", 
+
+                console.log("Frontend - Connection statuses in response:",
                     [...new Set(allConnections.map(conn => conn.connectionStatus))]);
                 console.log("Frontend - All connections:", allConnections);
-                
+
                 setConnections(allConnections);
-                
+
                 const actualTotal = responseData.total || allConnections.length;
                 setTotalConnections(actualTotal);
-                
-                
+
+
                 setError(null);
-                
+
             } else {
 
                 setLicenses([]);
                 setConnections([]);
                 setTotalConnections(0);
-                
-                
+
+
                 if (result.Error === "No data Found." || !result.Success) {
                     setError("No connections found matching your criteria.");
                 } else {
@@ -224,19 +224,19 @@ const LicenseUsagePage = () => {
         fetchLicenseIds();
     }, []);
 
-   
+
     useEffect(() => {
         if (licenseIdsLoaded && selectedLicense !== "all") {
             fetchLicenses();
         } else if (selectedLicense === "all") {
-          
+
             setConnections([]);
             setTotalConnections(0);
             setLicenses([]);
             setError(null);
         }
     }, [selectedLicense, selectedConnectionStatus, selectedLastUsage, currentPage, licenseIdsLoaded]);
-    
+
     useEffect(() => {
         setCurrentPage(1);
     }, [selectedLicense, selectedConnectionStatus, selectedLastUsage]);
@@ -249,7 +249,7 @@ const LicenseUsagePage = () => {
 
     const handleConfirmAction = async () => {
         console.log(`Performing ${selectedAction} on connection:`, selectedConnection.connectionId);
-        
+
         // Here you would make the API call to perform the action
         try {
             // Example API call structure
@@ -264,15 +264,15 @@ const LicenseUsagePage = () => {
             //         licenseId: selectedConnection.licenseId
             //     })
             // });
-            
+
             // For demo purposes, just show success
             alert(`${selectedAction} action completed for connection ${selectedConnection.connectionId}`);
-            
+
         } catch (error) {
             console.error(`Failed to ${selectedAction} connection:`, error);
             alert(`Failed to ${selectedAction} connection. Please try again.`);
         }
-        
+
         setShowConfirmDialog(false);
         setSelectedAction(null);
         setSelectedConnection(null);
@@ -299,7 +299,7 @@ const LicenseUsagePage = () => {
     // Apply search filter to connections (this is frontend-only filtering)
     const paginatedConnections = useMemo(() => {
         if (!searchTerm) return connections;
-        
+
         return connections.filter(connection =>
             (connection.clientId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
             (connection.connectionId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -309,7 +309,7 @@ const LicenseUsagePage = () => {
 
     const totalPages = Math.ceil(totalConnections / recordsPerPage);
 
-   
+
     const getEmptyStateMessage = () => {
         if (selectedLicense === "all") {
             return {
@@ -336,8 +336,12 @@ const LicenseUsagePage = () => {
         setError(null);
     };
 
-    
+
     const hasActiveFilters = searchTerm || selectedLicense !== "all" || selectedConnectionStatus !== "all" || selectedLastUsage !== "all";
+
+    const totalRound=(value) =>{
+        return  Math.round(value * 1000)/1000;
+    }
 
     return (
         <div className="space-y-6">
@@ -359,18 +363,25 @@ const LicenseUsagePage = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Filter by License
                             </label>
-                            <Select value={selectedLicense} onValueChange={setSelectedLicense} disabled={!licenseIdsLoaded}>
+                            <Select
+                                value={selectedLicense}
+                                onValueChange={setSelectedLicense}
+                                disabled={!licenseIdsLoaded}
+                            >
                                 <SelectTrigger className="w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
                                     <SelectValue placeholder={!licenseIdsLoaded ? "Loading licenses..." : "Select license"} />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="max-h-60 overflow-y-auto"> 
                                     <SelectItem value="all">All Licenses</SelectItem>
                                     {uniqueLicenseIds.map(id => (
-                                        <SelectItem key={id} value={id}>{id}</SelectItem>
+                                        <SelectItem key={id} value={id}>
+                                            {id}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
+
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -405,15 +416,15 @@ const LicenseUsagePage = () => {
                                     </SelectItem>
                                     <SelectItem value="oldUsage">
                                         <div className="flex items-center">
-                                            <Clock className="w-4 h-4 mr-2 text-orange-500" /> Older ({">"}7 days) 
+                                            <Clock className="w-4 h-4 mr-2 text-orange-500" /> Older ({">"}7 days)
                                         </div>
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="mt-7 w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 onClick={handleClearFilters}
                                 className="w-auto"
                                 disabled={loading}
@@ -503,7 +514,7 @@ const LicenseUsagePage = () => {
                                                 {conn.connectionStatus.replace('_', ' ').toLowerCase()}
                                             </Badge>
                                         </td>
-                                        <td className="py-3 px-4 text-sm text-gray-800 text-center">{calculateTotalCredits(conn.featureUsage)}</td>
+                                        <td className="py-3 px-4 text-sm text-gray-800 text-center">{totalRound(calculateTotalCredits(conn.featureUsage))}</td>
                                         <td className="py-3 px-4 text-sm text-gray-600 text-center">
                                             <div className="flex items-center justify-center gap-2">
                                                 <Clock className={`w-4 h-4 ${getUsageCategory(conn.lastUsageDate) === 'recentUsage' ? 'text-green-500' : 'text-orange-500'}`} />
@@ -568,7 +579,7 @@ const LicenseUsagePage = () => {
                 </div>
             )}
 
-            
+
             {totalConnections > 0 && totalPages > 1 && !loading && !error && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <div className="text-sm text-gray-600">
@@ -588,7 +599,7 @@ const LicenseUsagePage = () => {
                 </div>
             )}
 
-          
+
             <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -616,12 +627,11 @@ const LicenseUsagePage = () => {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleConfirmAction}
-                            className={`${
-                                selectedAction === 'start' ? 'bg-green-600 hover:bg-green-700' :
-                                selectedAction === 'stop' ? 'bg-red-600 hover:bg-red-700' :
-                                selectedAction === 'restart' ? 'bg-orange-600 hover:bg-orange-700' :
-                                'bg-gray-600 hover:bg-gray-700'
-                            }`}
+                            className={`${selectedAction === 'start' ? 'bg-green-600 hover:bg-green-700' :
+                                    selectedAction === 'stop' ? 'bg-red-600 hover:bg-red-700' :
+                                        selectedAction === 'restart' ? 'bg-orange-600 hover:bg-orange-700' :
+                                            'bg-gray-600 hover:bg-gray-700'
+                                }`}
                         >
                             {selectedAction === 'start' && <Play className="w-4 h-4 mr-1" />}
                             {selectedAction === 'stop' && <Square className="w-4 h-4 mr-1" />}
