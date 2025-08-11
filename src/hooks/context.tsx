@@ -1,5 +1,4 @@
 "use client";
-import { getFromLocalStorage } from "@/components/encryption/encryption";
 import { createContext, useContext, useState } from "react";
 
 interface AppContextType {
@@ -29,11 +28,11 @@ const URL = process.env.NEXT_PUBLIC_END_POINT;
 const LogUrl = process.env.NEXT_PUBLIC_LOGS_END_POINT;
 const WEBSOCKETURL = process.env.NEXT_PUBLIC_WEBSOCKET;
 const IMAGE_URL= process.env.NEXT_PUBLIC_DIGIT_OCEAN
-const token = getFromLocalStorage("token");
-const orgId = getFromLocalStorage("orgId");
-const email = getFromLocalStorage("email");
-const role = getFromLocalStorage("role");
-const logedIn = token!==null && orgId!==null && name !==null&& email!==null;
+const token = '';
+const orgId = '';
+const email = '';
+const role = '';
+const logedIn = token!==null && orgId!==null && role !==null&& email!==null;
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [isLogedIn, setIsLogedIn] = useState<boolean>(

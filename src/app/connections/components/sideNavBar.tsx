@@ -68,7 +68,7 @@ export default function sideNavBar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const { userData } = useAppContext();
-  const { data: session } = useSession();
+//   const { data: session } = useSession();
   const pathname = usePathname();
   const { isMobile } = useSidebar();
 
