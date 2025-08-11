@@ -56,7 +56,11 @@ const LicenseUsageAnalytics = ({ licenses, onLicenseClick }) => {
     ];
 
     // Custom tooltip for line chart
-    const CustomLineTooltip = ({ active, payload, label }) => {
+    const CustomLineTooltip = ({ active, payload, label } : {
+        active? : any,
+        payload? : any,
+        label? : any
+    }) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
 

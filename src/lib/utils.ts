@@ -1,4 +1,3 @@
-import { getFromLocalStorage } from "@/components/encryption/encryption"
 import { clsx, type ClassValue } from "clsx"
 import { useSession } from "next-auth/react"
 import { ROUTER_TYPE } from "next/dist/build/utils"
@@ -12,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 
 
 export const apiHeader=()=>{
-  const token =getFromLocalStorage('token');
+  const token = '';
   const {data:session}=useSession();
 
   if(session?.accessToken&&session?.memberId){

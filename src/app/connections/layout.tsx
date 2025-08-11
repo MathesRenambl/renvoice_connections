@@ -2,7 +2,7 @@
 
 import  Sidebar  from "@/app/connections/components/sideNavBar";
 import { useAppContext } from "@/hooks/context";
-import { Header } from "./components/header";
+import { Header } from "../../components/landing/header";
 
 export default function DashboardLayout({
   children,
@@ -17,14 +17,17 @@ export default function DashboardLayout({
     
   return (
     <>
-    <div className="flex h-[calc(100vh-4.1rem)] w-full ">
+    <div className="w-full">
+
         <Header/>
-      <Sidebar />
-      <div className=" h-auto w-full ">
-        <main className="p-4 md:p-6 h-auto w-full ">
-          {children}
-        </main>
-      </div>
+        <div className="flex h-[calc(100vh-4.1rem)]">
+            <Sidebar />
+            <div className=" h-auto w-full ">
+                <main className="p-4 md:p-6 h-auto w-full ">
+                {children}
+                </main>
+            </div>            
+        </div>
     </div>
     </>
   );

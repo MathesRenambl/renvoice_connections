@@ -2,11 +2,9 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { SidebarProvider } from "../ui/sidebar";
-import { protectedRoute } from "@/data/protectedRoute";
 import { useAppContext } from "@/hooks/context";
 import { useEffect, useState } from "react";
 import { useAlert } from "@/hooks/alertHook";
-import { getFromLocalStorage } from "../encryption/encryption";
 import { redirectToPageByStatus } from "@/lib/utils";
 import Preloader from "../ui/presloader";
 import { Header } from "../landing/header";
@@ -16,7 +14,7 @@ export function RootLayoutClient({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
- const{isLogedIn}=useAppContext();
+//  const{isLogedIn}=useAppContext();
  const {alert,hideAlert,showAlert}=useAlert();
  const [Loading, setLoading] = useState<boolean>(true);
   useEffect(() => {
@@ -46,7 +44,7 @@ export function RootLayoutClient({
     <>
     <SidebarProvider>
       <div className="min-w-full">
-        <Header />
+        {/* <Header /> */}
       <main className="flex flex-1">
         {children}
       </main> 
