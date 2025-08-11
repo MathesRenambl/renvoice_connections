@@ -90,7 +90,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
     
     try {
       const requestBody: LicenseRequestBody = {
-        orgId: "ORG12350",
+        orgId: "ORG17537870059048",
         page: page
       };
 
@@ -128,7 +128,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
 
       console.log("Request Body:", requestBody);
 
-      const response = await fetch('http://192.168.1.11:8000/license/getLicenses', {
+      const response = await fetch('http://192.168.1.31:8000/license/getLicenses', {
         method: "POST",
         headers: {
           "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
@@ -218,6 +218,10 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
     
     fetchLicenses(1, filters);
   };
+
+  const totalCredits = (value) => {
+    return  Math.round(value * 1000)/1000;
+  }
 
   // Handle Enter key press in search input
   const handleKeyPress = (e) => {
@@ -529,7 +533,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
       {/* License Cards - Only show when we have data and no error */}
       {!loading && !error && licenses.length > 0 && (
         <CardContent className="px-0">
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {licenses.map((item, index) => {
               const daysUntilExpiry = item.daysUntilExpiry;
               const isExpiringSoon = daysUntilExpiry <= 30 && daysUntilExpiry > 0;
@@ -537,14 +541,14 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
               const globalIndex = (currentPage - 1) * itemsPerPage + index + 1;
 
               return (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white hover:bg-gray-50 transition-colors duration-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-bold">
+                <div key={index} className="border border-gray-200 rounded-lg p-8 bg-white hover:bg-gray-50 transition-colors duration-200 min-h-80  shadow-sm hover:shadow-md">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-600 rounded-full text-sm font-bold">
                         {globalIndex}
                       </div>
                       <div>
-                        <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex items-center space-x-3 mb-2">
                           <p
                             className="font-bold text-gray-900 text-lg cursor-pointer hover:text-blue-600 hover:underline transition-colors duration-200"
                             onClick={() => onLicenseClick(item.licenseId)}
@@ -552,11 +556,11 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                           >
                             {item.licenseId}
                           </p>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${item.status === 'ACTIVE'
+                          <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${item.status === 'ACTIVE'
                               ? 'bg-green-100 text-green-700 border border-green-200'
                               : 'bg-red-100 text-red-700 border border-red-200'
                             }`}>
-                            <div className={`w-2 h-2 rounded-full mr-1 ${item.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'
+                            <div className={`w-2 h-2 rounded-full mr-2 ${item.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'
                               }`}></div>
                             {item.status}
                           </span>
@@ -578,13 +582,13 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-2xl text-indigo-600">{item.totalUsedCredits} <span className="text-xl text-indigo-600 font-normal">credits</span></p>
+                      <p className="font-bold text-2xl text-gray-900">{totalCredits(item.totalUsedCredits)} <span className="text-xl text-gray-900 font-normal">credits</span></p>
                       <p className="text-sm text-gray-900">Total Usage</p>
                     </div>
                   </div>
 
                   {/* Connection Summary */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
                     <div className="bg-white rounded-lg p-3 border shadow-sm">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
@@ -622,7 +626,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
 
                   {/* Enhanced Additional Info */}
                   <div className="bg-white rounded-lg p-3 border shadow-sm">
-                    <div className="flex justify-between gap-4">
+                    <div className="flex justify-between gap-4 ">
                       <div className="flex items-center space-x-2">
                         <Activity className="w-4 h-4 text-blue-500" />
                         <span className="text-sm text-black">Last Activity:</span>
