@@ -40,24 +40,24 @@ const serviceConfig = {
 };
 
 // Pricing calculator function based on calls service
-const calculatePrice = (connections: number, isYearly: boolean = false) => {
-    const callsService = serviceConfig.service.find(s => s.name === 'calls');
-    const baseAmount = callsService ? callsService.amount : 100;
+// const calculatePrice = (connections: number, isYearly: boolean = false) => {
+//     const callsService = serviceConfig.service.find(s => s.name === 'calls');
+//     const baseAmount = callsService ? callsService.amount : 100;
 
-    // let pricePerConnection;
-    // if (connections <= 10) pricePerConnection = 22;
-    // else if (connections <= 50) pricePerConnection = 16;
-    // else if (connections <= 100) pricePerConnection = 14;
-    // else if (connections <= 250) pricePerConnection = 12;
-    // else if (connections <= 500) pricePerConnection = 11;
-    // else if (connections <= 1000) pricePerConnection = 9.5;
-    // else if (connections <= 2000) pricePerConnection = 8.5;
-    // else pricePerConnection = 7.5;
+//     // let pricePerConnection;
+//     // if (connections <= 10) pricePerConnection = 22;
+//     // else if (connections <= 50) pricePerConnection = 16;
+//     // else if (connections <= 100) pricePerConnection = 14;
+//     // else if (connections <= 250) pricePerConnection = 12;
+//     // else if (connections <= 500) pricePerConnection = 11;
+//     // else if (connections <= 1000) pricePerConnection = 9.5;
+//     // else if (connections <= 2000) pricePerConnection = 8.5;
+//     // else pricePerConnection = 7.5;
 
-    // const price = Math.round(connections * pricePerConnection);
-    // return isYearly ? price * 12 : price;
-    return baseAmount
-};
+//     // const price = Math.round(connections * pricePerConnection);
+//     // return isYearly ? price * 12 : price;
+//     return baseAmount
+// };
 
 const PurchaseLicense = () => {
     const [sliderConnections, setSliderConnections] = useState([100]);
@@ -71,11 +71,35 @@ const PurchaseLicense = () => {
     const [paymentStatus, setPaymentStatus] = useState('idle');
     const [transactionId, setTransactionId] = useState('');
 
+
+    const int=(value: string | number): number => {
+        return Math.trunc(Number(value));
+    };
+
     // Determine current connections from slider or custom input
     const currentConnections = showCustomInput && customConnections && parseInt(customConnections) >= 1
         ? parseInt(customConnections)
         : sliderConnections[0];
 
+
+    const calculatePrice = (connections: number, isYearly: boolean = false) => {
+        const callsService = serviceConfig.service.find(s => s.name === 'calls');
+        const baseAmount = callsService ? callsService.amount : 100;
+
+        // let pricePerConnection;
+        // if (connections <= 10) pricePerConnection = 22;
+        // else if (connections <= 50) pricePerConnection = 16;
+        // else if (connections <= 100) pricePerConnection = 14;
+        // else if (connections <= 250) pricePerConnection = 12;
+        // else if (connections <= 500) pricePerConnection = 11;
+        // else if (connections <= 1000) pricePerConnection = 9.5;
+        // else if (connections <= 2000) pricePerConnection = 8.5;
+        // else pricePerConnection = 7.5;
+
+        // const price = Math.round(connections * pricePerConnection);
+        // return isYearly ? price * 12 : price;
+        return baseAmount * int(sliderConnections[0])
+    };
     const currentPrice = calculatePrice(currentConnections, isYearly);
 
     // Calculate services total (excluding calls which is included in base price)
@@ -89,7 +113,7 @@ const PurchaseLicense = () => {
                 }
             }
         });
-        return total;
+        return total * int(sliderConnections[0]);
     };
     const serviceTotal = calculateServicesTotal()
     // Calculate discount based on active connections + new connections
@@ -274,6 +298,13 @@ const PurchaseLicense = () => {
 
     const totalConnections = serviceConfig.activateConnection + currentConnections;
 
+    function handleClearFilters() {
+    setSliderConnections([1]);
+    setCustomConnections("");
+    setShowCustomInput(false);
+    setSelectedServices({ calls: true });
+}
+
     return (
         <div>
             <PageTitle
@@ -297,21 +328,62 @@ const PurchaseLicense = () => {
                     {!showCustomInput ? (
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
-                                <Label className="text-lg font-medium text-gray-900">New Connections: {sliderConnections[0].toLocaleString()}</Label>
-                                <Button variant="link" onClick={handleCustomConnectionToggle}>Enter Custom Amount</Button>
+                                <Label className="text-lg font-medium text-gray-900">
+                                    New Connections: {sliderConnections[0].toLocaleString()}
+                                </Label>
+                                <Button variant="link" onClick={handleCustomConnectionToggle}>
+                                    Enter Custom Amount
+                                </Button>
                             </div>
-                            <Slider value={sliderConnections} onValueChange={setSliderConnections} max={10000} min={1} step={1} />
-                            <div className="flex justify-between text-sm text-gray-500"><span>1</span><span>10,000</span></div>
+
+                            <Slider
+                                value={sliderConnections}
+                                onValueChange={setSliderConnections}
+                                max={10000}
+                                min={1}
+                                step={1}
+                            />
+                            <div className="flex justify-between text-sm text-gray-500">
+                                <span>1</span><span>10,000</span>
+                            </div>
+                             <div className="flex justify-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={handleClearFilters}
+                                    className="w-40"
+                                >
+                                    Reset Connections
+                                </Button>
+                            </div>
+                    
                         </div>
+                        
                     ) : (
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
-                                <Label htmlFor="custom-connections" className="text-lg font-medium text-gray-900">Custom New Connections</Label>
-                                <Button variant="link" onClick={handleCustomConnectionToggle}>Use Slider</Button>
+                                <Label htmlFor="custom-connections" className="text-lg font-medium text-gray-900">
+                                    Custom New Connections
+                                </Label>
+                                <Button variant="link" onClick={handleCustomConnectionToggle}>
+                                    Use Slider
+                                </Button>
                             </div>
-                            <Input id="custom-connections" type="number" placeholder="Enter connections (e.g., 5000 upto 100000)" value={customConnections} onChange={handleCustomConnectionChange} min="1" max="10000000" className="text-center text-lg" />
+
+                            <Input
+                                id="custom-connections"
+                                type="number"
+                                placeholder="Enter connections (e.g., 5000 upto 100000)"
+                                value={customConnections}
+                                onChange={handleCustomConnectionChange}
+                                min="1"
+                                max="10000000"
+                                className="text-center text-lg"
+                            />
+
+                        
                         </div>
                     )}
+
                     <div className="flex gap-2">
                         {/* Active Connections Display */}
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full">
@@ -442,7 +514,7 @@ const PurchaseLicense = () => {
                                 />
                                 {/* <InfoRow label="Services Cost (per connection)" value={`₹${totalServiceCostPerConnection.toLocaleString()}`} /> */}
 
-                                <InfoRow
+                                {/* <InfoRow
                                     label="Total Connection Price"
                                     value={
                                         <span className="inline-flex items-center justify-center">
@@ -450,7 +522,7 @@ const PurchaseLicense = () => {
                                             <span>{totalConnectionPrice.toLocaleString()}</span>
                                         </span>
                                     }
-                                />
+                                /> */}
                                 {serviceTotal > 0 ? (<InfoRow
                                     label="Add-on Services"
                                     value={
@@ -460,6 +532,17 @@ const PurchaseLicense = () => {
                                         </span>
                                     }
                                 />) : ""}
+
+                                <InfoRow
+                                    label="Total Connection Price"
+                                    value={
+                                        <span className="inline-flex items-center justify-center">
+                                            <Bolt size={13} className="inline-block mr-1 mt-0.5" />
+                                            <span>{totalConnectionPrice.toLocaleString()}</span>
+                                        </span>
+                                    }
+                                />
+
                                 {discountPercentage > 0 && (
                                     <div className="flex justify-between text-green-600">
                                         <span className="font-semibold">Connection Discount ({discountPercentage}%)</span>

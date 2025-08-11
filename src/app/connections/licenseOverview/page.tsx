@@ -582,7 +582,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-2xl text-indigo-600">{totalCredits(item.totalUsedCredits)} <span className="text-xl text-indigo-600 font-normal">credits</span></p>
+                      <p className="font-bold text-2xl text-gray-900">{totalCredits(item.totalUsedCredits)} <span className="text-xl text-gray-900 font-normal">credits</span></p>
                       <p className="text-sm text-gray-900">Total Usage</p>
                     </div>
                   </div>
