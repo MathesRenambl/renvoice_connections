@@ -264,7 +264,6 @@ const PaymentHistory = () => {
         setYearFilter("all");
         setCurrentPage(1);
         setError(null);
-
         // Fetch with cleared filters
         fetchLicenses(1, {
             searchTerm: "",
