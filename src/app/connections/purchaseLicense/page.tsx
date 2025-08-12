@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, } from "@/components/ui/dialog";
+import { purchaseLicense } from "@/app/api/page";
 
 // Service configuration
 const serviceConfig = {
@@ -164,7 +165,7 @@ const PurchaseLicense = () => {
         // === Final Payload ===
         const requestBody = {
             paymentType: "CREDIT",
-            orgId: "ORG17549713896497",
+            orgId: "ORG17537870059048",
             discount,
             couponCode: "",
             license: {
@@ -176,28 +177,17 @@ const PurchaseLicense = () => {
         };
         console.log(requestBody)
         try {
-            const response = await fetch("http://192.168.1.11:8000/payments/initiatePayment", {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-
+            const data = await purchaseLicense(requestBody);
+            // const data = await response.json();
             if (data.Success || data.success) {
                 setPaymentStatus('success');
-            } else {
+            } 
+            else {
                 setPaymentStatus('failed');
                 // setErrorMessage(data.message || data.error || 'Payment processing failed');
             }
-        } catch (error) {
+        } 
+        catch (error) {
             console.error('Payment error:', error);
             setPaymentStatus('failed');
             // setErrorMessage(error.message || 'Network error occurred. Please try again.');

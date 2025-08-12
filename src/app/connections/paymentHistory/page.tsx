@@ -7,23 +7,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageTitle from '@/components/ui/pageTitle';
+import { getPayment } from '@/app/api/page';
 
 interface requestBody {
-    orgId : string,
-    page : number,
-    licenseId? : string,
-    paymentType? : string,
-    status? : string,
-    months? : string,
-    year? : string
+    orgId: string,
+    page: number,
+    licenseId?: string,
+    paymentType?: string,
+    status?: string,
+    months?: string,
+    year?: string
 }
 
 interface filters {
-    searchTerm? : string,
-    paymentType? : string,
-    status? : string,
-    months? : string,
-    year? : string
+    searchTerm?: string,
+    paymentType?: string,
+    status?: string,
+    months?: string,
+    year?: string
 }
 
 const PaymentHistory = () => {
@@ -47,7 +48,7 @@ const PaymentHistory = () => {
     const [error, setError] = useState(null);
 
     // API call function - Fixed to properly handle data clearing
-    const fetchLicenses = useCallback(async (page = 1, filters:filters = {}) => {
+    const fetchLicenses = useCallback(async (page = 1, filters: filters = {}) => {
         setLoading(true);
         setError(null);
 
@@ -58,9 +59,10 @@ const PaymentHistory = () => {
         }
 
         try {
-            const requestBody:requestBody = {
-                orgId: "ORG17549713896497",
-                page: page
+            const requestBody: requestBody = {
+                orgId: "ORG17537870059048",
+                page: page,
+                paymentType: "CREDIT"
             };
 
             // Add filters to request body if they exist
@@ -86,16 +88,9 @@ const PaymentHistory = () => {
 
             console.log("Request Body:", requestBody);
 
-            const response = await fetch('http://192.168.1.31:8000/payments/getPayment', {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody)
-            });
+            const data = await getPayment(requestBody);
 
-            const data = await response.json();
+            // const data = await response.json();
             console.log("API Response:", data);
 
             if (data.success) {
@@ -103,7 +98,7 @@ const PaymentHistory = () => {
                 const totalCountData = data.data[0]?.totalCount?.[0]?.count || 0;
                 const paginationData = data.pagination || {};
                 const filterYears = data.data[0]?.years?.[0]?.years || [];
-
+                console.log(payments)
                 setPaymentData(payments);
                 setYearsData(filterYears);
                 setTotalCount(totalCountData);
@@ -333,7 +328,7 @@ const PaymentHistory = () => {
                     Export
                 </Button> */}
             </PageTitle>
-           
+
             {/* Filters */}
             <Card>
                 <CardContent className="p-6">
@@ -372,7 +367,7 @@ const PaymentHistory = () => {
                                     <SelectItem value="MONEY">Money</SelectItem>
                                 </SelectContent>
                             </Select>
-                           
+
                             <Select value={statusFilter} onValueChange={handleStatus}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Status" />
@@ -385,7 +380,7 @@ const PaymentHistory = () => {
                                     <SelectItem value="REFUND">Refund</SelectItem>
                                 </SelectContent>
                             </Select>
-                           
+
                             <Select value={monthFilter} onValueChange={handleMonths}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Month" />
@@ -406,7 +401,7 @@ const PaymentHistory = () => {
                                     <SelectItem value='12'>December</SelectItem>
                                 </SelectContent>
                             </Select>
-                           
+
                             <Select value={yearFilter} onValueChange={handleYear}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Year" />
@@ -418,7 +413,7 @@ const PaymentHistory = () => {
                                     ))}
                                 </SelectContent>
                             </Select>
-                           
+
                             {/* Clear Filters Button */}
                             <div className="flex items-end">
                                 <Button
@@ -432,7 +427,7 @@ const PaymentHistory = () => {
                             </div>
                         </div>
                     </div>
-                   
+
                     {/* Active Filters Display */}
                     {hasActiveFilters && (
                         <div className="mt-4 pt-4 border-t border-gray-200">
@@ -468,7 +463,7 @@ const PaymentHistory = () => {
                     )}
                 </CardContent>
             </Card>
-           
+
             {/* Payment Table */}
             <Card>
                 <CardHeader>
@@ -481,21 +476,25 @@ const PaymentHistory = () => {
                             <p className="text-sm">{error}</p>
                         </div>
                     )}
-                   
+
                     {loading && paymentData.length === 0 && (
                         <div className="text-center py-12">
                             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
                             <p className="text-gray-500">Loading payment records...</p>
                         </div>
                     )}
-                   
+
                     {!loading && !error && (
                         <div className="overflow-hidden">
                             <table className="w-full">
                                 <thead className="bg-gray-50">
                                     <tr className="border-b border-gray-200 text-center">
-                                        <th className="py-3 px-4 font-medium text-gray-900">License ID</th>
-                                        <th className="py-3 px-4 font-medium text-gray-900">No of Connections</th>
+                                        {paymentTypeFilter === "CREDIT" ? (
+                                            <>
+                                                <th className="py-3 px-4 font-medium text-gray-900">License ID</th>
+                                                <th className="py-3 px-4 font-medium text-gray-900">No of Connections</th>
+                                            </>
+                                        ) : ""}
                                         <th className="py-3 px-4 font-medium text-gray-900">Pay Date</th>
                                         <th className="py-3 px-4 font-medium text-gray-900">Payment Type</th>
                                         <th className="py-3 px-4 font-medium text-gray-900">Price</th>
@@ -509,8 +508,12 @@ const PaymentHistory = () => {
                                             key={item.licenseId + index}
                                             className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
                                         >
-                                            <td className="py-4 px-4 text-center text-gray-600">{item.licenseId ? item.licenseId : "-"}</td>
-                                            <td className="py-4 px-4 text-center text-gray-600">{item.noOfConnections ? item.noOfConnections : "-"}</td>
+                                            {paymentTypeFilter === "CREDIT" ? (
+                                                <>
+                                                    <td className="py-4 px-4 text-center text-gray-600">{item.licenseId ? item.licenseId : "-"}</td>
+                                                    <td className="py-4 px-4 text-center text-gray-600">{item.noOfConnections ? item.noOfConnections : "-"}</td>
+                                                </>
+                                            ) : ""}
                                             <td className="py-4 px-4 text-center text-gray-600">{formatDate(item.dateOfPurchased)}</td>
                                             <td className="py-4 px-4 text-center font-semibold text-gray-900">{item.paymentType}</td>
                                             <td className="py-4 px-4 text-center font-semibold text-gray-900">
@@ -518,7 +521,7 @@ const PaymentHistory = () => {
                                                     {item.paymentType === "CREDIT" ? (
                                                         <>
                                                             <Bolt size={20} className="inline-block mr-1" />
-                                                            {item.amount}
+                                                            {item.credits}
                                                         </>
                                                     ) : (
                                                         formatCurrency(item.amount)
@@ -545,14 +548,14 @@ const PaymentHistory = () => {
                                     ))}
                                 </tbody>
                             </table>
-                           
+
                             {paymentData.length === 0 && !loading && !error && (
                                 <div className="text-center py-12 text-gray-500">
                                     <p className="text-lg font-medium mb-2">No payment records found</p>
                                     <p className="text-sm">Try adjusting your filters or search terms</p>
                                 </div>
                             )}
-                           
+
                             {paymentData.length > 0 && (
                                 <div className="flex items-center justify-between mt-6 p-4 border-t">
                                     <div className="text-sm text-gray-600">

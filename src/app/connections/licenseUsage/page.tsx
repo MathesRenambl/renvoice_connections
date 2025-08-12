@@ -504,8 +504,8 @@ const LicenseUsagePage = () => {
                     <table className="w-full min-w-max">
                         <thead className="bg-gray-50">
                             <tr className="border-b border-gray-200">
-                                <th className="text-left py-3 px-4 font-medium text-gray-700">Client ID</th>
                                 <th className="text-left py-3 px-4 font-medium text-gray-700">Connection ID</th>
+                                <th className="text-left py-3 px-4 font-medium text-gray-700">Client ID</th>
                                 <th className="text-center py-3 px-4 font-medium text-gray-700">Connection Status</th>
                                 <th className="text-center py-3 px-4 font-medium text-gray-700">Usage Credits</th>
                                 <th className="text-center py-3 px-4 font-medium text-gray-700">Last Used</th>
@@ -516,8 +516,8 @@ const LicenseUsagePage = () => {
                             {!error && paginatedConnections.length > 0 ? (
                                 paginatedConnections.map((conn, index) => (
                                     <tr key={`${conn.connectionId}-${index}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                        <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.clientId}</td>
                                         <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.connectionId}</td>
+                                        <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.clientId}</td>
                                         <td className="py-3 px-4 text-center">
                                             <Badge variant="outline" className={`capitalize ${conn.connectionStatus === 'ACTIVE' ? 'border-green-200 text-green-800 bg-green-100' : 'border-red-200 text-red-800 bg-red-100'}`}>
                                                 <Wifi className="w-3 h-3 mr-1.5" />

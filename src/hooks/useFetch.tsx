@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
-const Url="http://192.168.1.31:8000"
-
-
+const Url="http://192.168.1.38:8000"
 
 export const usePostFetch = async (endPoint: any, data: any) => {
 
