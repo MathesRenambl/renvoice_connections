@@ -45,6 +45,7 @@ export default function LoginPage() {
     const [otpValue, setOtpValue] = useState('');
     const [resendTimer, setResendTimer] = useState(0);
     const mobile = useMediaQuery("mobile");
+    
     const emailForm = useForm<EmailFormData>({
         resolver: zodResolver(emailSchema),
         defaultValues: {
@@ -62,15 +63,19 @@ export default function LoginPage() {
     // Auto redirect if already logged in
     useEffect(() => {
         const checkSession = async () => {
-            const session = await getSession();
-            if (session?.accessToken) {
-                router.push("/connections/dashboard");
+            try {
+                const session = await getSession();
+                if (session?.accessToken) {
+                    router.push("/connections/dashboard");
+                }
+            } catch (error) {
+                console.log("Session check error:", error);
             }
         };
         checkSession();
 
         return () => setIsLoading(false);
-    }, []);
+    }, [router]);
 
     // Timer effect for resend OTP
     useEffect(() => {
@@ -83,29 +88,44 @@ export default function LoginPage() {
     // Email Submit Logic - Send OTP
     const handleEmailSubmit = async (formData: EmailFormData) => {
         setIsLoading(true);
-        setStep('otp');
+        console.log("Attempting to send OTP to:", formData.memberEmail);
+        
         try {
-            // Call your API to send OTP
-            const response = await fetch(`${URL}/api/send-otp`, {
+            const response = await fetch("http://192.168.1.31:8000/auth/sendOtp", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify({ email: formData.memberEmail }),
             });
 
+            console.log("SendOTP Response status:", response.status);
+            
+            // Check if response is ok first
             if (response.ok) {
+                const responseData = await response.json();
+                console.log("SendOTP Success:", responseData);
+                
                 setUserEmail(formData.memberEmail);
                 setStep('otp');
-                setResendTimer(30); // 30 seconds cooldown
+                setResendTimer(30);
                 showAlert("OTP sent to your email successfully!", "success");
             } else {
-                const errorData = await response.json();
-                // showAlert(errorData.message || "Failed to send OTP", "error");
+                // Handle non-ok responses
+                let errorMessage = "Failed to send OTP";
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                    console.log("SendOTP Error data:", errorData);
+                } catch (parseError) {
+                    console.log("Error parsing error response:", parseError);
+                }
+                showAlert(errorMessage, "error");
             }
         } catch (error) {
-            console.error("Send OTP error", error);
-            showAlert("An error occurred while sending OTP", "error");
+            console.error("Network/Send OTP error:", error);
+            showAlert("Network error occurred while sending OTP. Please check your connection.", "error");
         } finally {
             setIsLoading(false);
         }
@@ -114,12 +134,15 @@ export default function LoginPage() {
     // OTP Submit Logic - Verify and Login
     const handleOTPSubmit = async (formData: OTPFormData) => {
         setIsLoading(true);
+        console.log("Attempting to verify OTP:", formData.otp, "for email:", userEmail);
+        
         try {
-            // First verify OTP
-            const otpResponse = await fetch(`${URL}/api/verify-otp`, {
+            // First verify OTP with your backend
+            const otpResponse = await fetch("http://192.168.1.31:8000/auth/login", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify({
                     email: userEmail,
@@ -127,31 +150,50 @@ export default function LoginPage() {
                 }),
             });
 
+            console.log("Login API Response status:", otpResponse.status);
+            
             if (otpResponse.ok) {
-                // If OTP is verified, proceed with login
-                const res = await signIn("credentials", {
-                    redirect: false,
-                    memberEmail: userEmail,
-                    memberPassword: formData.otp, // Use OTP as password for verification
-                    callbackUrl: "/connections/dashboard",
-                });
+                const loginData = await otpResponse.json();
+                console.log("Login API Success:", loginData);
+                
+                // Now proceed with NextAuth signIn
+                console.log("Attempting NextAuth signIn...");
+                
 
-                if (res?.status === 200) {
+                if (loginData?.Success) {
+                    console.log("Login successful, redirecting...");
+                    setIsLogedIn(true);
+                    localStorage.setItem("token", loginData.token)
+                    showAlert("Login successful!", "success");
                     router.replace("/connections/dashboard");
-                } else {
-                    showAlert("Login failed after OTP verification", "error");
+                } 
+                else {
+                    console.log("NextAuth signIn failed:", loginData?.error);
+                    showAlert(loginData?.error || "Login failed after OTP verification", "error");
+                    // Clear OTP on NextAuth failure
+                    setOtpValue('');
+                    otpForm.setValue('otp', '');
                 }
             } else {
-                const errorData = await otpResponse.json();
-                showAlert(errorData.message || "Invalid OTP", "error");
+                // Handle OTP verification failure
+                let errorMessage = "Invalid OTP";
+                try {
+                    const errorData = await otpResponse.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                    console.log("OTP verification error:", errorData);
+                } catch (parseError) {
+                    console.log("Error parsing OTP error response:", parseError);
+                }
+                
+                showAlert(errorMessage, "error");
                 // Clear OTP input on error
                 setOtpValue('');
                 otpForm.setValue('otp', '');
             }
         } catch (error) {
+            console.error("Network/OTP verification error:", error);
             setIsLogedIn(false);
-            console.error("OTP verification error", error);
-            showAlert("An error occurred during verification", "error");
+            showAlert("Network error occurred during verification. Please try again.", "error");
             setOtpValue('');
             otpForm.setValue('otp', '');
         } finally {
@@ -164,24 +206,39 @@ export default function LoginPage() {
         if (resendTimer > 0) return;
 
         setIsLoading(true);
+        console.log("Attempting to resend OTP to:", userEmail);
+        
         try {
-            const response = await fetch(`${URL}/api/send-otp`, {
+            const response = await fetch("http://192.168.1.31:8000/auth/sendOtp", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify({ email: userEmail }),
             });
 
+            console.log("Resend OTP Response status:", response.status);
+
             if (response.ok) {
+                const responseData = await response.json();
+                console.log("Resend OTP Success:", responseData);
                 setResendTimer(30);
                 showAlert("OTP resent successfully!", "success");
             } else {
-                showAlert("Failed to resend OTP", "error");
+                let errorMessage = "Failed to resend OTP";
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.error || errorMessage;
+                    console.log("Resend OTP Error:", errorData);
+                } catch (parseError) {
+                    console.log("Error parsing resend error response:", parseError);
+                }
+                showAlert(errorMessage, "error");
             }
         } catch (error) {
-            console.error("Resend OTP error", error);
-            showAlert("An error occurred while resending OTP", "error");
+            console.error("Network/Resend OTP error:", error);
+            showAlert("Network error occurred while resending OTP", "error");
         } finally {
             setIsLoading(false);
         }
@@ -196,8 +253,18 @@ export default function LoginPage() {
         setResendTimer(0);
     };
 
-    const debouncedEmailSubmit = debounceApiCall(handleEmailSubmit, 1000);
-    const debouncedOTPSubmit = debounceApiCall(handleOTPSubmit, 1000);
+    // Remove debouncing to ensure API calls work immediately
+    const handleEmailSubmitWrapper = (data: EmailFormData) => {
+        if (!isLoading) {
+            handleEmailSubmit(data);
+        }
+    };
+
+    const handleOTPSubmitWrapper = (data: OTPFormData) => {
+        if (!isLoading) {
+            handleOTPSubmit(data);
+        }
+    };
 
     if (isLoading && step === 'email') return <Preloader />;
 
@@ -205,9 +272,7 @@ export default function LoginPage() {
         <div className="w-full min-h-[calc(100vh-8rem)] px-6 py-4">
             <div className="flex items-center gap-3 w-[200px]">
                 <Link href="/dashboard" className="flex items-center">
-                    {/* Placeholder logo - replace with your actual logo */}
                     <div className="flex items-center gap-2">
-
                         <span className="font-semibold text-lg text-gray-800">
                             <Image
                                 src="/renvoice.png"
@@ -219,20 +284,10 @@ export default function LoginPage() {
                             />
                         </span>
                     </div>
-
-                    {/* Alternative: Image logo (uncomment when you have your logo) */}
-                    {/* <Image
-                            src="/your-logo.png"
-                            alt="Logo"
-                            width={mobile ? 100 : 140}
-                            height={40}
-                            className="object-contain"
-                            priority
-                        /> */}
                 </Link>
             </div>
+            
             <div className="w-full h-full flex items-center justify-center">
-
                 <MotionDiv
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -277,7 +332,7 @@ export default function LoginPage() {
                             <CardContent className="space-y-4 p-0">
                                 {step === 'email' ? (
                                     <Form {...emailForm}>
-                                        <form onSubmit={emailForm.handleSubmit(debouncedEmailSubmit)} className="space-y-4">
+                                        <form onSubmit={emailForm.handleSubmit(handleEmailSubmitWrapper)} className="space-y-4">
                                             <FormField
                                                 control={emailForm.control}
                                                 name="memberEmail"
@@ -308,7 +363,7 @@ export default function LoginPage() {
                                     </Form>
                                 ) : (
                                     <Form {...otpForm}>
-                                        <form onSubmit={otpForm.handleSubmit(debouncedOTPSubmit)} className="space-y-6">
+                                        <form onSubmit={otpForm.handleSubmit(handleOTPSubmitWrapper)} className="space-y-6">
                                             <FormField
                                                 control={otpForm.control}
                                                 name="otp"
@@ -326,7 +381,6 @@ export default function LoginPage() {
                                                                     }}
                                                                     disabled={isLoading}
                                                                     onKeyDown={(e) => {
-                                                                        // Allow only number keys and control keys (like backspace)
                                                                         if (
                                                                             !/[0-9]/.test(e.key) &&
                                                                             e.key !== "Backspace" &&
@@ -340,7 +394,7 @@ export default function LoginPage() {
                                                                     onPaste={(e) => {
                                                                         const pasted = e.clipboardData.getData("text");
                                                                         if (!/^\d+$/.test(pasted)) {
-                                                                            e.preventDefault(); // Block paste if it includes non-numeric
+                                                                            e.preventDefault();
                                                                         }
                                                                     }}
                                                                 >

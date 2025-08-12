@@ -95,7 +95,10 @@ const LicenseUsageAnalytics = ({ licenses, onLicenseClick }) => {
     };
 
     // Custom tooltip for pie chart
-    const CustomPieTooltip = ({ active, payload }) => {
+    const CustomPieTooltip = ({ active, payload } : {
+        active? : any,
+        payload? : any
+    }) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
 
