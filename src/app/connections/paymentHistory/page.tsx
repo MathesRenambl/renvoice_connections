@@ -59,7 +59,7 @@ const PaymentHistory = () => {
 
         try {
             const requestBody:requestBody = {
-                orgId: "ORG12345",
+                orgId: "ORG17549713896497",
                 page: page
             };
 
@@ -510,8 +510,8 @@ const PaymentHistory = () => {
                                             key={item.licenseId + index}
                                             className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
                                         >
-                                            <td className="py-4 px-4 text-center text-gray-600">{item.licenseId}</td>
-                                            <td className="py-4 px-4 text-center text-gray-600">{item.noOfConnections}</td>
+                                            <td className="py-4 px-4 text-center text-gray-600">{item.licenseId ? item.licenseId : "-"}</td>
+                                            <td className="py-4 px-4 text-center text-gray-600">{item.noOfConnections ? item.noOfConnections : "-"}</td>
                                             <td className="py-4 px-4 text-center text-gray-600">{formatDate(item.dateOfPurchased)}</td>
                                             <td className="py-4 px-4 text-center font-semibold text-gray-900">{item.paymentType}</td>
                                             <td className="py-4 px-4 text-center font-semibold text-gray-900">
