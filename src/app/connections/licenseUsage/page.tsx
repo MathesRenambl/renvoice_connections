@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { getConnection } from "@/app/api/page";
 
 interface payload {
     orgId: string;
@@ -78,45 +79,65 @@ const LicenseUsagePage = () => {
 
     // Load only license IDs initially
     const fetchLicenseIds = async () => {
-        try {
-            const payload = {
-                orgId: ORG_ID,
-                includeLicenseIds: true,
-            };
+    try {
+        const payLoad = {
+            orgId: ORG_ID,
+            includeLicenseIds: true,
+        };
+        const response = await getConnection(payLoad);
+    
+        if (response.Success && response.Success.licenseIds) {
+            setUniqueLicenseIds(response.Success.licenseIds);
+            setLicenseIdsLoaded(true);
 
-            const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            if (licenseIdFromParams && response.Success.licenseIds.includes(licenseIdFromParams)) {
+                setSelectedLicense(licenseIdFromParams);
             }
-            const result = await response.json();
-
-            if (result.Success && result.Success.licenseIds) {
-                setUniqueLicenseIds(result.Success.licenseIds);
-                setLicenseIdsLoaded(true);
-
-                // Set license from URL parameter if it exists and is valid
-                if (licenseIdFromParams && result.Success.licenseIds.includes(licenseIdFromParams)) {
-                    setSelectedLicense(licenseIdFromParams);
-                }
-            } else {
-                console.error("API returned an error:", result.Error || "Unknown error");
-                setUniqueLicenseIds([]);
-                setError("Failed to load license IDs");
-            }
-        } catch (error) {
-            console.error("Failed to fetch license IDs:", error);
+        } else {
+            console.error("API returned an error:", response.Error || "Unknown error");
             setUniqueLicenseIds([]);
-            setError("Failed to fetch license IDs. Please try again.");
+            setError("Failed to load license IDs");
         }
-    };
+    } catch (error) {
+        console.error("Failed to fetch license IDs:", error);
+        setUniqueLicenseIds([]);
+        setError("Failed to fetch license IDs. Please try again.");
+    }
+};
+
+    //         const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${token}`
+    //             },
+    //             body: JSON.stringify(payload),
+    //         });
+
+    //         if (!response.ok) {
+    //             throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    //         }
+    //         const result = await response.json();
+
+    //         if (result.Success && result.Success.licenseIds) {
+    //             setUniqueLicenseIds(result.Success.licenseIds);
+    //             setLicenseIdsLoaded(true);
+
+    //             // Set license from URL parameter if it exists and is valid
+    //             if (licenseIdFromParams && result.Success.licenseIds.includes(licenseIdFromParams)) {
+    //                 setSelectedLicense(licenseIdFromParams);
+    //             }
+    //         } else {
+    //             console.error("API returned an error:", result.Error || "Unknown error");
+    //             setUniqueLicenseIds([]);
+    //             setError("Failed to load license IDs");
+    //         }
+    //     } catch (error) {
+    //         console.error("Failed to fetch license IDs:", error);
+    //         setUniqueLicenseIds([]);
+    //         setError("Failed to fetch license IDs. Please try again.");
+    //     }
+    // };
 
     // Fetch connections based on selected filters
     const fetchLicenses = async () => {
@@ -145,19 +166,8 @@ const LicenseUsagePage = () => {
                 payload.lastUsageFilter = selectedLastUsage;
             }
 
-            const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(payload),
-            });
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
-            }
-            const result = await response.json();
+            const result= await getConnection(payload);;
             console.log("API Response:", result);
 
             if (result.Success) {
