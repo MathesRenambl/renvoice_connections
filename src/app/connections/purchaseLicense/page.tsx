@@ -10,16 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-    DialogClose,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, } from "@/components/ui/dialog";
 
 // Service configuration
 const serviceConfig = {
@@ -29,35 +20,15 @@ const serviceConfig = {
         { minConnection: 1000, discount: 30 }
     ],
     service: [
-        { name: "calls", duration: 12, credit: 10000, amount: 100 },
-        { name: "analysis", duration: 12, credit: 5000, amount: 150 },
-        { name: "f1", duration: 12, credit: 3000, amount: 50 },
-        { name: "f2", duration: 12, credit: 5000, amount: 99 },
-        { name: "f3", duration: 12, credit: 8000, amount: 199 }
+        { name: "calls", duration: 12, minutes: 10000, credit: 100 },
+        { name: "analysis", duration: 12, minutes: 5000, credit: 150 },
+        { name: "f1", duration: 12, minutes: 3000, credit: 50 },
+        { name: "f2", duration: 12, minutes: 5000, credit: 99 },
+        { name: "f3", duration: 12, minutes: 8000, credit: 199 }
     ],
     activateConnection: 900,
     gst: 18
 };
-
-// Pricing calculator function based on calls service
-// const calculatePrice = (connections: number, isYearly: boolean = false) => {
-//     const callsService = serviceConfig.service.find(s => s.name === 'calls');
-//     const baseAmount = callsService ? callsService.amount : 100;
-
-//     // let pricePerConnection;
-//     // if (connections <= 10) pricePerConnection = 22;
-//     // else if (connections <= 50) pricePerConnection = 16;
-//     // else if (connections <= 100) pricePerConnection = 14;
-//     // else if (connections <= 250) pricePerConnection = 12;
-//     // else if (connections <= 500) pricePerConnection = 11;
-//     // else if (connections <= 1000) pricePerConnection = 9.5;
-//     // else if (connections <= 2000) pricePerConnection = 8.5;
-//     // else pricePerConnection = 7.5;
-
-//     // const price = Math.round(connections * pricePerConnection);
-//     // return isYearly ? price * 12 : price;
-//     return baseAmount
-// };
 
 const PurchaseLicense = () => {
     const [sliderConnections, setSliderConnections] = useState([100]);
@@ -71,8 +42,10 @@ const PurchaseLicense = () => {
     const [paymentStatus, setPaymentStatus] = useState('idle');
     const [transactionId, setTransactionId] = useState('');
 
+    console.log(sliderConnections, selectedServices)
+    console.log(paymentStatus)
 
-    const int=(value: string | number): number => {
+    const int = (value: string | number): number => {
         return Math.trunc(Number(value));
     };
 
@@ -84,20 +57,7 @@ const PurchaseLicense = () => {
 
     const calculatePrice = (connections: number, isYearly: boolean = false) => {
         const callsService = serviceConfig.service.find(s => s.name === 'calls');
-        const baseAmount = callsService ? callsService.amount : 100;
-
-        // let pricePerConnection;
-        // if (connections <= 10) pricePerConnection = 22;
-        // else if (connections <= 50) pricePerConnection = 16;
-        // else if (connections <= 100) pricePerConnection = 14;
-        // else if (connections <= 250) pricePerConnection = 12;
-        // else if (connections <= 500) pricePerConnection = 11;
-        // else if (connections <= 1000) pricePerConnection = 9.5;
-        // else if (connections <= 2000) pricePerConnection = 8.5;
-        // else pricePerConnection = 7.5;
-
-        // const price = Math.round(connections * pricePerConnection);
-        // return isYearly ? price * 12 : price;
+        const baseAmount = callsService ? callsService.credit : 100;
         return baseAmount * int(sliderConnections[0])
     };
     const currentPrice = calculatePrice(currentConnections, isYearly);
@@ -109,7 +69,7 @@ const PurchaseLicense = () => {
             if (selectedServices[serviceName] && serviceName !== 'calls') {
                 const service = serviceConfig.service.find(s => s.name === serviceName);
                 if (service) {
-                    total += service.amount;
+                    total += service.credit;
                 }
             }
         });
@@ -130,7 +90,7 @@ const PurchaseLicense = () => {
     // Calculate total service cost per connection (calls + selected add-ons)
     const totalServiceCostPerConnection = serviceConfig.service.reduce((total, service) => {
         if (selectedServices[service.name]) {
-            return total + service.amount;
+            return total + service.credit;
         }
         return total;
     }, 0);
@@ -182,20 +142,66 @@ const PurchaseLicense = () => {
     }, [isModalOpen]);
 
     // Simulate payment verification
-    const handlePaymentConfirmation = () => {
-        // if (!transactionId) {
-        //     alert('Please enter a Transaction ID.');
-        //     return;
-        // }
+    const handlePaymentConfirmation = async () => {
+
         setPaymentStatus('processing');
-        setTimeout(() => {
-            const didSucceed = 0.4 > 0.3;
-            if (didSucceed) {
+        // === Helper to build features array based on selection ===
+        const selectedFeatureNames = Object.entries(selectedServices)
+            .filter(([_, selected]) => selected)
+            .map(([name]) => name);
+
+        const connectionCount = sliderConnections[0]; // example
+        const features = serviceConfig.service
+            .filter(service => selectedFeatureNames.includes(service.name))
+            .map(service => ({
+                name: service.name,
+                credits: service.credit * connectionCount
+            }));
+        const totalCredits = totalConnectionPrice;
+        let discount = calculateDiscount();
+        console.log("checking data : ", totalConnections, selectedFeatureNames, features, totalConnectionPrice, finalTotal, connectionCount, discount)
+
+        // === Final Payload ===
+        const requestBody = {
+            paymentType: "CREDIT",
+            orgId: "ORG17549713896497",
+            discount,
+            couponCode: "",
+            license: {
+                features,
+                duration: 12,
+                connectionCount
+            },
+            totalCredits
+        };
+        console.log(requestBody)
+        try {
+            const response = await fetch("http://192.168.1.11:8000/payments/initiatePayment", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.Success || data.success) {
                 setPaymentStatus('success');
             } else {
                 setPaymentStatus('failed');
+                // setErrorMessage(data.message || data.error || 'Payment processing failed');
             }
-        }, 3000);
+        } catch (error) {
+            console.error('Payment error:', error);
+            setPaymentStatus('failed');
+            // setErrorMessage(error.message || 'Network error occurred. Please try again.');
+        }
     };
 
     // Helper component for styling feature items
@@ -299,11 +305,11 @@ const PurchaseLicense = () => {
     const totalConnections = serviceConfig.activateConnection + currentConnections;
 
     function handleClearFilters() {
-    setSliderConnections([1]);
-    setCustomConnections("");
-    setShowCustomInput(false);
-    setSelectedServices({ calls: true });
-}
+        setSliderConnections([1]);
+        setCustomConnections("");
+        setShowCustomInput(false);
+        setSelectedServices({ calls: true });
+    }
 
     return (
         <div>
@@ -318,7 +324,6 @@ const PurchaseLicense = () => {
                 </TabsList>
 
             </Tabs> */}
-
             <Card className="border-2 border-gray-200">
                 <CardHeader className="text-center pb-4">
                     <CardTitle className="text-2xl font-bold text-gray-900">Choose Your Connections</CardTitle>
@@ -346,7 +351,7 @@ const PurchaseLicense = () => {
                             <div className="flex justify-between text-sm text-gray-500">
                                 <span>1</span><span>10,000</span>
                             </div>
-                             <div className="flex justify-end">
+                            <div className="flex justify-end">
                                 <Button
                                     variant="outline"
                                     onClick={handleClearFilters}
@@ -355,9 +360,8 @@ const PurchaseLicense = () => {
                                     Reset Connections
                                 </Button>
                             </div>
-                    
+
                         </div>
-                        
                     ) : (
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
@@ -368,7 +372,6 @@ const PurchaseLicense = () => {
                                     Use Slider
                                 </Button>
                             </div>
-
                             <Input
                                 id="custom-connections"
                                 type="number"
@@ -379,11 +382,8 @@ const PurchaseLicense = () => {
                                 max="10000000"
                                 className="text-center text-lg"
                             />
-
-                        
                         </div>
                     )}
-
                     <div className="flex gap-2">
                         {/* Active Connections Display */}
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full">
@@ -397,7 +397,6 @@ const PurchaseLicense = () => {
                                 </div>
                             </div>
                         </div>
-
                         {/* Total Connections Display */}
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4 w-full">
                             <div className="flex justify-between items-center">
@@ -423,7 +422,6 @@ const PurchaseLicense = () => {
                             <p className="text-gray-600">Calls service is included by default. Select additional services to enhance your plan</p>
                             <p className="font-semibold text-gray-900">Current Connections: {serviceConfig.activateConnection.toLocaleString()}</p>
                         </CardHeader>
-
                         <div className="space-y-1.5 px-6 pb-3">
                             <h3 className="text-2xl font-bold text-gray-900">New Connections: {currentConnections.toLocaleString()}</h3>
                             <p className="text-sm text-gray-600">{isYearly ? "Annual plan" : "Flexible monthly plan"}</p>
@@ -467,17 +465,17 @@ const PurchaseLicense = () => {
                                                         service.name === 'calls' ? 'Calls (Base Service)' : service.name}
                                                 </td>
                                                 <td className="py-3 px-4">
-                                                    {service.credit ? service.credit.toLocaleString() : '-'}
+                                                    {service.minutes ? service.minutes.toLocaleString() : '-'}
                                                 </td>
                                                 <td className="py-3 px-4 font-semibold">
                                                     {service.name === 'calls' ? (
                                                         <div className="flex flex-col">
-                                                            <span className="pr-3"><Bolt size={13} className="inline-block mr-1 -mt-0.5" />{`${service.amount}`}</span>
+                                                            <span className="pr-3"><Bolt size={13} className="inline-block mr-1 -mt-0.5" />{`${service.credit}`}</span>
                                                             <span className="text-sm text-blue-600">Included in base price</span>
                                                         </div>
                                                     ) : (
 
-                                                        <span className="flex items-center"><Bolt size={13} className="inline-block mr-1 mt-0.5" />{`${service.amount}`}</span>
+                                                        <span className="flex items-center"><Bolt size={13} className="inline-block mr-1 mt-0.5" />{`${service.credit}`}</span>
                                                     )}
                                                 </td>
                                                 <td className="py-3 px-4">
@@ -488,7 +486,6 @@ const PurchaseLicense = () => {
                                     </tbody>
                                 </table>
                             </div>
-
                         </CardContent>
                     </Card>
 
@@ -501,7 +498,6 @@ const PurchaseLicense = () => {
                                 <InfoRow label="New Connections" value={currentConnections.toLocaleString()} />
                                 <InfoRow label="Active Connections" value={serviceConfig.activateConnection.toLocaleString()} />
                                 <InfoRow label="Total Connections" value={totalConnections.toLocaleString()} />
-
                                 <hr />
                                 <InfoRow
                                     label="Base Connection Cost"
@@ -513,7 +509,6 @@ const PurchaseLicense = () => {
                                     }
                                 />
                                 {/* <InfoRow label="Services Cost (per connection)" value={`₹${totalServiceCostPerConnection.toLocaleString()}`} /> */}
-
                                 {/* <InfoRow
                                     label="Total Connection Price"
                                     value={
@@ -532,7 +527,6 @@ const PurchaseLicense = () => {
                                         </span>
                                     }
                                 />) : ""}
-
                                 <InfoRow
                                     label="Total Connection Price"
                                     value={
@@ -542,7 +536,6 @@ const PurchaseLicense = () => {
                                         </span>
                                     }
                                 />
-
                                 {discountPercentage > 0 && (
                                     <div className="flex justify-between text-green-600">
                                         <span className="font-semibold">Connection Discount ({discountPercentage}%)</span>
@@ -557,7 +550,6 @@ const PurchaseLicense = () => {
                                     </span>}
                                 />
                                 {/* <InfoRow label={`GST (${serviceConfig.gst}%)`} value={`${gstAmount.toLocaleString()}`} /> */}
-
                                 <hr />
                                 <div className="flex justify-between items-center text-lg"><span className="font-bold">Total</span><span className="font-bold text-2xl flex items-center gap-1"><Bolt size={22} className="mt-1" />{finalTotal.toLocaleString()}</span></div>
                                 <p className="text-xs text-gray-500 text-center pt-2">Prices are in INR and inclusive of all applicable taxes.</p>
@@ -575,8 +567,6 @@ const PurchaseLicense = () => {
                         </Card>
                     </div>
                 </div>
-
-
             </div>
             <Card className="border-2 border-gray-300 mt-8">
                 <CardContent className="p-8">

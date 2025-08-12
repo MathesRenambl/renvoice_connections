@@ -7,7 +7,7 @@ export const useLogOut = (): (() => void) => {
   const router = useRouter();
 
   const logOut = () => {
-     localStorage.clear();
+     localStorage.setItem("token", "");
      router.push("/connectionLogin")
     // setUserData(null)
     // router.push("/");

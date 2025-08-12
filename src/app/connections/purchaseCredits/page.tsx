@@ -15,31 +15,31 @@ const creditConfig = {
     gst: 18,
     // Recommended credit packages
     recommendations: [
-        { 
-            credits: 1000, 
-            title: "Starter Pack", 
-            description: "Perfect for small businesses", 
+        {
+            credits: 1000,
+            title: "Starter Pack",
+            description: "Perfect for small businesses",
             popular: false,
             bonus: 0
         },
-        { 
-            credits: 5000, 
-            title: "Business Pack", 
-            description: "Most popular choice", 
+        {
+            credits: 5000,
+            title: "Business Pack",
+            description: "Most popular choice",
             popular: true,
             bonus: 500
         },
-        { 
-            credits: 10000, 
-            title: "Enterprise Pack", 
-            description: "For growing businesses", 
+        {
+            credits: 10000,
+            title: "Enterprise Pack",
+            description: "For growing businesses",
             popular: false,
             bonus: 1500
         },
-        { 
-            credits: 25000, 
-            title: "Premium Pack", 
-            description: "Maximum value", 
+        {
+            credits: 25000,
+            title: "Premium Pack",
+            description: "Maximum value",
             popular: false,
             bonus: 5000
         }
@@ -62,19 +62,20 @@ const PurchaseCredits = () => {
     // State for the modal's multi-step payment flow
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState('idle');
+    const [errorMessage, setErrorMessage] = useState('');
 
     // Calculate credits and pricing
     const calculateCreditsAndPricing = (inputCredits) => {
         const credits = parseInt(inputCredits) || 0;
-        
+
         // Find applicable bonus
         const bonusRule = creditConfig.bonusRules
             .sort((a, b) => b.minCredits - a.minCredits)
             .find(rule => credits >= rule.minCredits);
-        
+
         const bonusCredits = bonusRule ? bonusRule.bonusCredits : 0;
         const totalCredits = credits + bonusCredits;
-        
+
         // Calculate pricing
         const baseAmount = credits * creditConfig.creditToInr;
         const gstAmount = Math.round((baseAmount * creditConfig.gst) / 100);
@@ -104,7 +105,6 @@ const PurchaseCredits = () => {
 
     // Handle package selection
     const handlePackageSelect = (pkg) => {
-
         console.log(pkg)
         setSelectedPackage(pkg);
         setIsCustomMode(false);
@@ -135,21 +135,53 @@ const PurchaseCredits = () => {
         if (!isModalOpen) {
             setTimeout(() => {
                 setPaymentStatus('idle');
+                setErrorMessage('');
             }, 300);
         }
     }, [isModalOpen]);
 
-    // Simulate payment verification
-    const handlePaymentConfirmation = () => {
+    // Simulate payment verification with API integration
+    const handlePaymentConfirmation = async () => {
         setPaymentStatus('processing');
-        setTimeout(() => {
-            const didSucceed = Math.random() > 0.3;
-            if (didSucceed) {
+        setErrorMessage('');
+        
+        const requestBody = {
+            "paymentType": "MONEY",
+            "orgId": "ORG17549713896497",
+            "amount": currentPurchase.finalAmount,
+            "couponCode": "NONE",
+            "credits": currentPurchase.purchaseCredits,
+            "bonusCredits": currentPurchase.bonusCredits,
+            "totalCredits": currentPurchase.totalCredits
+        };
+
+        try {
+            const response = await fetch("http://192.168.1.11:8000/payments/initiatePayment", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.Success || data.success) {
                 setPaymentStatus('success');
             } else {
                 setPaymentStatus('failed');
+                setErrorMessage(data.message || data.error || 'Payment processing failed');
             }
-        }, 3000);
+        } catch (error) {
+            console.error('Payment error:', error);
+            setPaymentStatus('failed');
+            setErrorMessage(error.message || 'Network error occurred. Please try again.');
+        }
     };
 
     // Helper component for info rows in modal
@@ -160,15 +192,29 @@ const PurchaseCredits = () => {
         </div>
     );
 
+    // Function to handle dialog close attempts
+    const handleDialogOpenChange = (open) => {
+        // Prevent closing during API request
+        if (paymentStatus === 'processing') {
+            return;
+        }
+        setIsModalOpen(open);
+    };
+
     // Renders the content inside the payment modal
     const renderModalContent = () => {
         switch (paymentStatus) {
             case 'processing':
                 return (
                     <div className="flex flex-col items-center justify-center text-center space-y-4 h-64">
-                        <Loader2 className="w-16 h-16 animate-spin text-gray-500" />
-                        <h3 className="text-xl font-semibold">Verifying Payment...</h3>
-                        <p className="text-muted-foreground">Please wait while we confirm your transaction. Do not close this window.</p>
+                        <Loader2 className="w-16 h-16 animate-spin text-blue-500" />
+                        <h3 className="text-xl font-semibold">Processing Payment...</h3>
+                        <p className="text-muted-foreground">
+                            Please wait while we process your payment. This may take a few moments.
+                        </p>
+                        <p className="text-sm text-amber-600 font-medium">
+                            Please do not close this window or refresh the page.
+                        </p>
                     </div>
                 );
             case 'success':
@@ -176,11 +222,25 @@ const PurchaseCredits = () => {
                     <div className="flex flex-col items-center justify-center text-center space-y-4 h-64">
                         <CheckCircle2 className="w-16 h-16 text-green-500" />
                         <h3 className="text-xl font-semibold text-green-600">Payment Successful!</h3>
-                        <p className="text-muted-foreground">
-                            Your credits have been added to your account. Thank you for your purchase!
-                        </p>
+                        <div className="space-y-2 text-sm">
+                            <p className="text-muted-foreground">
+                                Your payment has been processed successfully.
+                            </p>
+                            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                                <p className="text-green-700 font-medium">
+                                    {currentPurchase.totalCredits.toLocaleString()} credits have been added to your account
+                                </p>
+                                {currentPurchase.bonusCredits > 0 && (
+                                    <p className="text-green-600 text-xs">
+                                        (Including {currentPurchase.bonusCredits.toLocaleString()} bonus credits)
+                                    </p>
+                                )}
+                            </div>
+                        </div>
                         <DialogClose asChild>
-                            <Button className="mt-4">Close</Button>
+                            <Button className="mt-4 bg-green-600 hover:bg-green-700">
+                                Continue
+                            </Button>
                         </DialogClose>
                     </div>
                 );
@@ -189,11 +249,26 @@ const PurchaseCredits = () => {
                     <div className="flex flex-col items-center justify-center text-center space-y-4 h-64">
                         <XCircle className="w-16 h-16 text-red-500" />
                         <h3 className="text-xl font-semibold text-red-600">Payment Failed</h3>
-                        <p className="text-muted-foreground">
-                            We could not confirm your payment. Please try again or contact support.
-                        </p>
+                        <div className="space-y-2">
+                            <p className="text-muted-foreground">
+                                We could not process your payment.
+                            </p>
+                            {errorMessage && (
+                                <div className="bg-red-50 p-3 rounded-lg border border-red-200 max-w-md">
+                                    <p className="text-red-700 text-sm">{errorMessage}</p>
+                                </div>
+                            )}
+                        </div>
                         <div className="flex gap-4 mt-4">
-                            <Button variant="outline" onClick={() => setPaymentStatus('idle')}>Try Again</Button>
+                            <Button 
+                                variant="outline" 
+                                onClick={() => {
+                                    setPaymentStatus('idle');
+                                    setErrorMessage('');
+                                }}
+                            >
+                                Try Again
+                            </Button>
                             <DialogClose asChild>
                                 <Button>Close</Button>
                             </DialogClose>
@@ -212,19 +287,19 @@ const PurchaseCredits = () => {
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div className="space-y-3 rounded-lg border p-4">
-                                <InfoRow 
-                                    label="Credits to Purchase" 
-                                    value={`${currentPurchase.purchaseCredits.toLocaleString()} credits`} 
+                                <InfoRow
+                                    label="Credits to Purchase"
+                                    value={`${currentPurchase.purchaseCredits.toLocaleString()} credits`}
                                 />
                                 {currentPurchase.bonusCredits > 0 && (
-                                    <InfoRow 
-                                        label="Bonus Credits" 
-                                        value={`${currentPurchase.bonusCredits.toLocaleString()} credits`} 
+                                    <InfoRow
+                                        label="Bonus Credits"
+                                        value={`${currentPurchase.bonusCredits.toLocaleString()} credits`}
                                     />
                                 )}
-                                <InfoRow 
-                                    label="Total Credits" 
-                                    value={`${currentPurchase.totalCredits.toLocaleString()} credits`} 
+                                <InfoRow
+                                    label="Total Credits"
+                                    value={`${currentPurchase.totalCredits.toLocaleString()} credits`}
                                 />
                                 <InfoRow label="Amount to be Paid" value={`₹${currentPurchase.finalAmount.toLocaleString()}`} />
                                 <hr />
@@ -240,8 +315,20 @@ const PurchaseCredits = () => {
                                     Cancel
                                 </Button>
                             </DialogClose>
-                            <Button type="button" className="w-full sm:w-auto h-12 text-lg" onClick={handlePaymentConfirmation}>
-                                Confirm Payment
+                            <Button 
+                                type="button" 
+                                className="w-full sm:w-auto h-12 text-lg" 
+                                onClick={handlePaymentConfirmation}
+                                disabled={paymentStatus === 'processing'}
+                            >
+                                {paymentStatus === 'processing' ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Processing...
+                                    </>
+                                ) : (
+                                    'Confirm Payment'
+                                )}
                             </Button>
                         </DialogFooter>
                     </>
@@ -252,19 +339,10 @@ const PurchaseCredits = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-
             <div className="border-b border-gray-200 pb-4">
                 <h1 className="text-3xl font-bold text-gray-900">Purchase Credits</h1>
                 <p className="text-gray-600 mt-1">Top up your account with credits to power your business operations</p>
             </div>
-
-            {/* <div className="text-left space-y-4">
-                <h1 className="text-4xl font-bold text-gray-900">Purchase Credits</h1>
-                <p className="text-xl text-gray-600">
-                    Top up your account with credits to power your business operations
-                </p>
-            </div> */}
-
             <div className="grid lg:grid-cols-3 gap-8">
                 {/* Left Side - Credit Packages */}
                 <div className="lg:col-span-2 space-y-6">
@@ -273,8 +351,8 @@ const PurchaseCredits = () => {
                         <h2 className="text-2xl font-semibold text-gray-900">
                             {isCustomMode ? "Custom Amount" : "Recommended Packages"}
                         </h2>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={toggleCustomMode}
                             className="text-sm"
                         >
@@ -302,7 +380,7 @@ const PurchaseCredits = () => {
                                 <p className="text-sm text-gray-500">
                                     Enter any amount between 1 and 1,000,000 credits
                                 </p>
-                                
+
                                 {customAmount && currentPurchase && (
                                     <div className="mt-4 p-4 bg-blue-50 rounded-lg border">
                                         <h4 className="font-semibold text-blue-900 mb-2">Your Purchase Preview</h4>
@@ -336,15 +414,14 @@ const PurchaseCredits = () => {
                             {creditConfig.recommendations.map((pkg, index) => {
                                 const pricing = calculateCreditsAndPricing(pkg.credits);
                                 const isSelected = selectedPackage?.credits === pkg.credits;
-                                
+
                                 return (
-                                    <Card 
+                                    <Card
                                         key={index}
-                                        className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                                            isSelected 
-                                                ? 'ring-2 ring-gray-500 shadow-lg' 
+                                        className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${isSelected
+                                                ? 'ring-2 ring-gray-500 shadow-lg'
                                                 : 'hover:ring-1 hover:ring-gray-300'
-                                        } ${pkg.popular ? 'border-gray-500' : ''}`}
+                                            } ${pkg.popular ? 'border-gray-500' : ''}`}
                                         onClick={() => handlePackageSelect(pkg)}
                                     >
                                         {pkg.popular && (
@@ -352,14 +429,13 @@ const PurchaseCredits = () => {
                                                 Most Popular
                                             </Badge>
                                         )}
-                                        
                                         <CardHeader className="text-center pb-2">
                                             <CardTitle className="text-xl font-bold text-gray-900">
                                                 {pkg.title}
                                             </CardTitle>
                                             <p className="text-gray-600 text-sm">{pkg.description}</p>
                                         </CardHeader>
-                                        
+
                                         <CardContent className="text-center space-y-3">
                                             <div className="space-y-1">
                                                 <div className="text-3xl font-bold text-black">
@@ -367,7 +443,7 @@ const PurchaseCredits = () => {
                                                 </div>
                                                 <div className="text-sm text-gray-500">Credits</div>
                                             </div>
-                                            
+
                                             {pricing.bonusCredits > 0 && (
                                                 <div className="bg-green-50 border border-green-200 rounded-lg p-2">
                                                     <div className="text-green-600 font-semibold text-sm">
@@ -378,7 +454,7 @@ const PurchaseCredits = () => {
                                                     </div>
                                                 </div>
                                             )}
-                                            
+
                                             <div className="space-y-1">
                                                 <div className="text-2xl font-bold text-gray-900">
                                                     ₹{pricing.finalAmount.toLocaleString()}
@@ -388,7 +464,7 @@ const PurchaseCredits = () => {
                                                 </div>
                                             </div>
                                         </CardContent>
-                                        
+
                                         {isSelected && (
                                             <div className="absolute top-4 right-4">
                                                 <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center">
@@ -412,55 +488,67 @@ const PurchaseCredits = () => {
                                 Order Summary
                             </CardTitle>
                         </CardHeader>
-                        
+
                         <CardContent className="space-y-4">
                             {currentPurchase ? (
                                 <>
                                     <div className="space-y-3">
-                                        <InfoRow 
-                                            label="Credits" 
-                                            value={`${currentPurchase.purchaseCredits.toLocaleString()}`} 
+                                        <InfoRow
+                                            label="Credits"
+                                            value={`${currentPurchase.purchaseCredits.toLocaleString()}`}
                                         />
-                                        
+
                                         {currentPurchase.bonusCredits > 0 && (
-                                            <InfoRow 
-                                                label="Bonus Credits" 
-                                                value={`+${currentPurchase.bonusCredits.toLocaleString()}`} 
+                                            <InfoRow
+                                                label="Bonus Credits"
+                                                value={`+${currentPurchase.bonusCredits.toLocaleString()}`}
                                             />
                                         )}
-                                        
-                                        <InfoRow 
-                                            label="Total Credits" 
-                                            value={`${currentPurchase.totalCredits.toLocaleString()}`} 
+
+                                        <InfoRow
+                                            label="Total Credits"
+                                            value={`${currentPurchase.totalCredits.toLocaleString()}`}
                                         />
-                                        
+
                                         <hr />
-                                        
-                                        <InfoRow 
-                                            label="Base Amount" 
-                                            value={`₹${currentPurchase.baseAmount.toLocaleString()}`} 
+
+                                        <InfoRow
+                                            label="Base Amount"
+                                            value={`₹${currentPurchase.baseAmount.toLocaleString()}`}
                                         />
-                                        
-                                        <InfoRow 
-                                            label={`GST (${creditConfig.gst}%)`} 
-                                            value={`₹${currentPurchase.gstAmount.toLocaleString()}`} 
+
+                                        <InfoRow
+                                            label={`GST (${creditConfig.gst}%)`}
+                                            value={`₹${currentPurchase.gstAmount.toLocaleString()}`}
                                         />
-                                        
+
                                         <hr />
-                                        
+
                                         <div className="flex justify-between items-center text-lg font-bold">
                                             <span>Total Amount</span>
                                             <span className="text-2xl">₹{currentPurchase.finalAmount.toLocaleString()}</span>
                                         </div>
                                     </div>
-                                    
-                                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+
+                                    <Dialog open={isModalOpen} onOpenChange={handleDialogOpenChange}>
                                         <DialogTrigger asChild>
                                             <Button className="w-full bg-gray-800 hover:bg-gray-700 text-white h-12 text-lg">
                                                 Proceed to Checkout
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="sm:max-w-2xl">
+                                        <DialogContent 
+                                            className="sm:max-w-2xl"
+                                            onEscapeKeyDown={(e) => {
+                                                if (paymentStatus === 'processing') {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                            onPointerDownOutside={(e) => {
+                                                if (paymentStatus === 'processing') {
+                                                    e.preventDefault();
+                                                }
+                                            }}
+                                        >
                                             {renderModalContent()}
                                         </DialogContent>
                                     </Dialog>
@@ -492,7 +580,7 @@ const PurchaseCredits = () => {
                                 Credits are added to your account immediately after payment confirmation
                             </p>
                         </div>
-                        
+
                         <div className="text-center">
                             <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                                 <TrendingUp className="w-8 h-8 text-gray-800" />
@@ -502,7 +590,7 @@ const PurchaseCredits = () => {
                                 Get bonus credits on bulk purchases - more credits, better value
                             </p>
                         </div>
-                        
+
                         <div className="text-center">
                             <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                                 <Shield className="w-8 h-8 text-gray-800" />
