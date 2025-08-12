@@ -91,13 +91,21 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       const { confirmPassword, ...signupData } = formData;
+       const apiData = {
+      email: signupData.memberEmail,          
+      name: signupData.organizationName,      
+      firstName: signupData.firstName,         
+      lastName: signupData.lastName,
+      password: signupData.memberPassword     
+    };
+    
       
-      const response = await fetch(`${URL}/auth/signup`, {
+      const response = await fetch(`${URL}/organization/registerOrganization`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(signupData),
+        body: JSON.stringify(apiData),
       });
 
       const result = await response.json();
@@ -112,6 +120,16 @@ export default function SignupPage() {
     //     showAlert(result.message || "Registration failed. Please try again.", "error");
     //   }
       
+    if (response.ok) {
+      showAlert("Registration successful! Please check your email to verify your account.", "success");
+      // Optionally redirect to login page after a delay
+      setTimeout(() => {
+        router.push("/connectionLogin");
+      }, 3000);
+    } else {
+      showAlert(result.Error || result.message || "Registration failed. Please try again.", "error");
+    }
+
       setIsLoading(false);
     } catch (error) {
       console.error("Signup error", error);
@@ -317,7 +335,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 className="text-primary hover:underline font-medium"
-                onClick={() => router.push("/login")}
+                onClick={() => router.push("/connectionLogin")}
               >
                 Sign in
               </button>

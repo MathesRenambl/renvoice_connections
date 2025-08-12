@@ -4,6 +4,7 @@ import { Eye, FileDown } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 
+
 function ConnectionTable({ConnectionHistory }) {
   const getStatusBadge = (status) => {
     switch (status) {

@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import Container from "@/components/ui/container";
 import PageTitle from "@/components/ui/pageTitle";
 import { useAppContext } from "@/hooks/context";
-import { getFromLocalStorage } from "@/components/encryption/encryption";
 import Alert from "@/components/alert/alert";
 import { useAlert } from "@/hooks/alertHook";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -114,7 +113,7 @@ const Page = () => {
     if (!validateForm()) return;
 
     setIsSaving(true);
-    const userId = getFromLocalStorage("userId");
+    const userId = localStorage.getItem("userId");
     
     try {
       const response = await fetch(`${URL}/users/profile/${userId}`, {
@@ -147,7 +146,7 @@ const Page = () => {
     if (!validateBankForm()) return;
 
     setIsSaving(true);
-    const userId = getFromLocalStorage("userId");
+    const userId = localStorage.getItem("userId");
     
     try {
       const response = await fetch(`${URL}/users/bank-details/${userId}`, {

@@ -59,7 +59,7 @@ const PaymentHistory = () => {
 
         try {
             const requestBody:requestBody = {
-                orgId: "ORG12345",
+                orgId: "ORG17537870059048",
                 page: page
             };
 
@@ -86,7 +86,7 @@ const PaymentHistory = () => {
 
             console.log("Request Body:", requestBody);
 
-            const response = await fetch('http://192.168.1.11:8000/payments/getPayment', {
+            const response = await fetch('http://192.168.1.31:8000/payments/getPayment', {
                 method: "POST",
                 headers: {
                     "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
