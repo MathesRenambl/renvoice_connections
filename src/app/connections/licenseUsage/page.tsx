@@ -590,7 +590,7 @@ const LicenseUsagePage = () => {
             )}
 
 
-            {totalConnections > 0 && totalPages > 1 && !loading && !error && (
+            {totalConnections > 0 && totalPages > 1 && !loading && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                     <div className="text-sm text-gray-600">
                         Showing <strong>{(currentPage - 1) * recordsPerPage + 1}</strong> to <strong>{Math.min(currentPage * recordsPerPage, totalConnections)}</strong> of <strong>{totalConnections}</strong> connections
