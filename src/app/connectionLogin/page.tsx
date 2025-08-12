@@ -21,6 +21,7 @@ import { debounceApiCall } from "@/lib/debounce";
 import Link from "next/link";
 import Image from "next/image";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { login, sendOtp } from "../api/page";
 
 // Zod Schema for Email Validation
 const emailSchema = z.object({
@@ -89,117 +90,191 @@ export default function LoginPage() {
     const handleEmailSubmit = async (formData: EmailFormData) => {
         setIsLoading(true);
         console.log("Attempting to send OTP to:", formData.memberEmail);
-        
-        try {
-            const response = await fetch("http://192.168.1.31:8000/auth/sendOtp", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ email: formData.memberEmail }),
-            });
 
-            console.log("SendOTP Response status:", response.status);
+        const payLoad=  {
+            email: formData.memberEmail
+        }
+
+        try{
+            const response = await sendOtp(payLoad);
+            console.log(response);
             
-            // Check if response is ok first
-            if (response.ok) {
-                const responseData = await response.json();
-                console.log("SendOTP Success:", responseData);
+                console.log("SendOTP Success:", response);
                 
                 setUserEmail(formData.memberEmail);
                 setStep('otp');
                 setResendTimer(30);
                 showAlert("OTP sent to your email successfully!", "success");
-            } else {
-                // Handle non-ok responses
-                let errorMessage = "Failed to send OTP";
-                try {
-                    const errorData = await response.json();
-                    errorMessage = errorData.message || errorData.error || errorMessage;
-                    console.log("SendOTP Error data:", errorData);
-                } catch (parseError) {
-                    console.log("Error parsing error response:", parseError);
-                }
-                showAlert(errorMessage, "error");
-            }
-        } catch (error) {
-            console.error("Network/Send OTP error:", error);
-            showAlert("Network error occurred while sending OTP. Please check your connection.", "error");
-        } finally {
-            setIsLoading(false);
+        }catch (error: any) {
+        console.error("Network/Send OTP error:", error);
+        
+        let errorMessage = "Failed to send OTP";
+        if (error.message) {
+            errorMessage = error.message;
         }
-    };
+        
+        showAlert(errorMessage, "error");
+    } finally {
+        setIsLoading(false);
+    }
+}
+
+
+        
+    //     try {
+    //         const response = await fetch("http://192.168.1.31:8000/auth/sendOtp", {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Accept': 'application/json',
+    //             },
+    //             body: JSON.stringify({ email: formData.memberEmail }),
+    //         });
+
+    //         console.log("SendOTP Response status:", response.status);
+            
+    //         // Check if response is ok first
+    //         if (response.ok) {
+    //             const responseData = await response.json();
+    //             console.log("SendOTP Success:", responseData);
+                
+    //             setUserEmail(formData.memberEmail);
+    //             setStep('otp');
+    //             setResendTimer(30);
+    //             showAlert("OTP sent to your email successfully!", "success");
+    //         } else {
+    //             // Handle non-ok responses
+    //             let errorMessage = "Failed to send OTP";
+    //             try {
+    //                 const errorData = await response.json();
+    //                 errorMessage = errorData.message || errorData.error || errorMessage;
+    //                 console.log("SendOTP Error data:", errorData);
+    //             } catch (parseError) {
+    //                 console.log("Error parsing error response:", parseError);
+    //             }
+    //             showAlert(errorMessage, "error");
+    //         }
+    //     } catch (error) {
+    //         console.error("Network/Send OTP error:", error);
+    //         showAlert("Network error occurred while sending OTP. Please check your connection.", "error");
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
 
     // OTP Submit Logic - Verify and Login
+
+
+
     const handleOTPSubmit = async (formData: OTPFormData) => {
         setIsLoading(true);
         console.log("Attempting to verify OTP:", formData.otp, "for email:", userEmail);
-        
-        try {
-            // First verify OTP with your backend
-            const otpResponse = await fetch("http://192.168.1.31:8000/auth/login", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: userEmail,
-                    otp: formData.otp
-                }),
-            });
 
-            console.log("Login API Response status:", otpResponse.status);
-            
-            if (otpResponse.ok) {
-                const loginData = await otpResponse.json();
-                console.log("Login API Success:", loginData);
-                
-                // Now proceed with NextAuth signIn
-                console.log("Attempting NextAuth signIn...");
-                
+        const payLoad = {
+            email: userEmail,
+            otp: formData.otp
+        }
 
-                if (loginData?.Success) {
-                    console.log("Login successful, redirecting...");
-                    setIsLogedIn(true);
-                    localStorage.setItem("token", loginData.token)
-                    showAlert("Login successful!", "success");
-                    router.replace("/connections/dashboard");
-                } 
-                else {
-                    console.log("NextAuth signIn failed:", loginData?.error);
-                    showAlert(loginData?.error || "Login failed after OTP verification", "error");
-                    // Clear OTP on NextAuth failure
-                    setOtpValue('');
-                    otpForm.setValue('otp', '');
-                }
-            } else {
-                // Handle OTP verification failure
-                let errorMessage = "Invalid OTP";
-                try {
-                    const errorData = await otpResponse.json();
-                    errorMessage = errorData.message || errorData.error || errorMessage;
-                    console.log("OTP verification error:", errorData);
-                } catch (parseError) {
-                    console.log("Error parsing OTP error response:", parseError);
-                }
-                
-                showAlert(errorMessage, "error");
-                // Clear OTP input on error
-                setOtpValue('');
-                otpForm.setValue('otp', '');
-            }
-        } catch (error) {
-            console.error("Network/OTP verification error:", error);
-            setIsLogedIn(false);
-            showAlert("Network error occurred during verification. Please try again.", "error");
+    try {
+        const loginData = await login(payLoad);
+        console.log("Login API Success:", loginData);
+
+        if (loginData?.Success) {
+            console.log("Login successful, redirecting...");
+            setIsLogedIn(true);
+            localStorage.setItem("token", loginData.token);
+            showAlert("Login successful!", "success");
+            router.replace("/connections/dashboard");
+        } else {
+            console.log("Login failed:", loginData?.error);
+            showAlert(loginData?.error || "Login failed after OTP verification", "error");
             setOtpValue('');
             otpForm.setValue('otp', '');
-        } finally {
-            setIsLoading(false);
         }
-    };
+        
+    } catch (error: any) {
+        console.error("Network/OTP verification error:", error);
+        setIsLogedIn(false);
+        let errorMessage = "Invalid OTP";
+        if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        showAlert(errorMessage, "error");
+        // Clear OTP input on error
+        setOtpValue('');
+        otpForm.setValue('otp', '');
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+
+        
+    //     try {
+    //         // First verify OTP with your backend
+    //         const otpResponse = await fetch("http://192.168.1.31:8000/auth/login", {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Accept': 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 email: userEmail,
+    //                 otp: formData.otp
+    //             }),
+    //         });
+
+    //         console.log("Login API Response status:", otpResponse.status);
+            
+    //         if (otpResponse.ok) {
+    //             const loginData = await otpResponse.json();
+    //             console.log("Login API Success:", loginData);
+                
+    //             // Now proceed with NextAuth signIn
+    //             console.log("Attempting NextAuth signIn...");
+                
+
+    //             if (loginData?.Success) {
+    //                 console.log("Login successful, redirecting...");
+    //                 setIsLogedIn(true);
+    //                 localStorage.setItem("token", loginData.token)
+    //                 showAlert("Login successful!", "success");
+    //                 router.replace("/connections/dashboard");
+    //             } 
+    //             else {
+    //                 console.log("NextAuth signIn failed:", loginData?.error);
+    //                 showAlert(loginData?.error || "Login failed after OTP verification", "error");
+    //                 // Clear OTP on NextAuth failure
+    //                 setOtpValue('');
+    //                 otpForm.setValue('otp', '');
+    //             }
+    //         } else {
+    //             // Handle OTP verification failure
+    //             let errorMessage = "Invalid OTP";
+    //             try {
+    //                 const errorData = await otpResponse.json();
+    //                 errorMessage = errorData.message || errorData.error || errorMessage;
+    //                 console.log("OTP verification error:", errorData);
+    //             } catch (parseError) {
+    //                 console.log("Error parsing OTP error response:", parseError);
+    //             }
+                
+    //             showAlert(errorMessage, "error");
+    //             // Clear OTP input on error
+    //             setOtpValue('');
+    //             otpForm.setValue('otp', '');
+    //         }
+    //     } catch (error) {
+    //         console.error("Network/OTP verification error:", error);
+    //         setIsLogedIn(false);
+    //         showAlert("Network error occurred during verification. Please try again.", "error");
+    //         setOtpValue('');
+    //         otpForm.setValue('otp', '');
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
 
     // Resend OTP
     const handleResendOTP = async () => {

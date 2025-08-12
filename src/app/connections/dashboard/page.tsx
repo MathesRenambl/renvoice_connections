@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Network, Calendar, Wifi, CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { getOrgdashboard } from "@/app/api/page";
 
 const formatDateTime = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -335,38 +336,62 @@ const ConnectionsDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-
-                const res = await fetch("http://192.168.1.31:8000/license/getOrgDashboard", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ orgId: "ORG17537870059048" })
-                });
-
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-
-                const data = await res.json();
-                console.log('Dashboard data:', data);
-                setDashboardData(data);
-            } catch (err) {
-                console.error('Error fetching dashboard data:', err);
-                setError(err.message);
-            } finally {
-                setLoading(false);
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const payLoad = {
+                orgId: "ORG17537870059048"
             }
-        };
+            const data = await getOrgdashboard(payLoad);
+            console.log('Dashboard data:', data);
+            setDashboardData(data);
+            
+        } catch (err) {
+            console.error('Error fetching dashboard data:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+    fetchData();
+}, []);
 
-        fetchData();
-    }, []);
+
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         try {
+    //             setLoading(true);
+    //             setError(null);
+
+    //             const res = await fetch("http://192.168.1.31:8000/license/getOrgDashboard", {
+    //                 method: "POST",
+    //                 headers: {
+    //                     "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
+    //                     "Content-Type": "application/json",
+    //                 },
+    //                 body: JSON.stringify({ orgId: "ORG17537870059048" })
+    //             });
+
+    //             if (!res.ok) {
+    //                 throw new Error(`HTTP error! status: ${res.status}`);
+    //             }
+
+    //             const data = await res.json();
+    //             console.log('Dashboard data:', data);
+    //             setDashboardData(data);
+    //         } catch (err) {
+    //             console.error('Error fetching dashboard data:', err);
+    //             setError(err.message);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+
+    //     fetchData();
+    // }, []);
 
     // Handle license click to navigate to usage page
     const handleLicenseClick = (licenseId) => {
