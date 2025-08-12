@@ -34,4 +34,14 @@ export const getPayment= async (payLoad: any) => {
     return data;
 }
 
+export const purchaseLicense= async (payLoad: any) => {
+    const data =await usePostFetch("/payments/initiatePayment",payLoad);
+    return data;
+}
+
+export const purchaseCredits= async (payLoad: any) => {
+    const data =await usePostFetch("/payments/initiatePayment",payLoad);
+    return data;
+}
+
 

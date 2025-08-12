@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, } from "@/components/ui/dialog";
+import { purchaseCredits } from "@/app/api/page";
 
 // Credit configuration
 const creditConfig = {
@@ -147,7 +148,7 @@ const PurchaseCredits = () => {
         
         const requestBody = {
             "paymentType": "MONEY",
-            "orgId": "ORG17549713896497",
+            "orgId": "ORG17537870059048",
             "amount": currentPurchase.finalAmount,
             "couponCode": "NONE",
             "credits": currentPurchase.purchaseCredits,
@@ -156,20 +157,13 @@ const PurchaseCredits = () => {
         };
 
         try {
-            const response = await fetch("http://192.168.1.11:8000/payments/initiatePayment", {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody)
-            });
+            const data = await purchaseCredits(requestBody);
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            // if (!response.ok) {
+            //     throw new Error(`HTTP error! status: ${response.status}`);
+            // }
 
-            const data = await response.json();
+            // const data = await response.json();
             
             if (data.Success || data.success) {
                 setPaymentStatus('success');

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { Network, Activity, XCircle, Search, Clock, Filter, Calendar, CheckCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { getLicenses } from "@/app/api/page";
 
 export interface LicenseFilters {
   searchTerm?: string;
@@ -128,16 +129,9 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
 
       console.log("Request Body:", requestBody);
 
-      const response = await fetch('http://192.168.1.31:8000/license/getLicenses', {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiY2hhZHJ1IiwiYWdlIjoiMTgiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3NzE0MjY3MDd9.0g4t7HMzscJhxbom0GbrptlOpfMkTCkT9tvNJ-RZ4fA",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody)
-      });
+      const data = await getLicenses(requestBody);
 
-      const data = await response.json();
+    //   const data = await response.json();
       console.log("API Response:", data);
 
       if (data.success) {
@@ -562,7 +556,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                             }`}>
                             <div className={`w-2 h-2 rounded-full mr-2 ${item.status === 'ACTIVE' ? 'bg-green-500' : 'bg-red-500'
                               }`}></div>
-                            {item.status}
+                            {item.status ? item.status : '-'}
                           </span>
                           {isExpiringSoon && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
