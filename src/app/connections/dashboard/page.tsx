@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Network, Calendar, Wifi, CheckCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { getOrgdashboard } from "@/app/api/page";
+import { useCredit } from "@/context/creditContext";
 
 const formatDateTime = (date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -342,7 +343,7 @@ const ConnectionsDashboard = () => {
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
+    const { setCredits } = useCredit();
 
     useEffect(() => {
     const fetchData = async () => {
@@ -353,8 +354,16 @@ const ConnectionsDashboard = () => {
                 orgId: "ORG17537870059048"
             }
             const data = await getOrgdashboard(payLoad);
+
             console.log('Dashboard data:', data);
-            setDashboardData(data);
+            if(data.Success) {
+                setDashboardData(data);
+                setCredits(data.orgData.credits)
+            }
+            else {
+                setDashboardData({})
+                setCredits(0)
+            }
             
         } catch (err) {
             console.error('Error fetching dashboard data:', err);

@@ -31,7 +31,7 @@ const PaymentHistory = () => {
     const [paymentData, setPaymentData] = useState([]);
     const [yearsData, setYearsData] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [paymentTypeFilter, setPaymentTypeFilter] = useState('all');
+    const [paymentTypeFilter, setPaymentTypeFilter] = useState('CREDIT');
     const [statusFilter, setStatusFilter] = useState('all');
     const [monthFilter, setMonthFilter] = useState('all');
     const [yearFilter, setYearFilter] = useState('all');
@@ -253,7 +253,7 @@ const PaymentHistory = () => {
     // Clear all filters - Fixed to properly reset everything
     const handleClearFilters = () => {
         setSearchTerm("");
-        setPaymentTypeFilter("all");
+        setPaymentTypeFilter("CREDIT");
         setStatusFilter("all");
         setMonthFilter("all");
         setYearFilter("all");
@@ -357,18 +357,18 @@ const PaymentHistory = () => {
                                 </div>
                             </div>
 
-                            <Select value={paymentTypeFilter} onValueChange={handlePaymentType}>
+                            <Select value={paymentTypeFilter} onValueChange={handlePaymentType} disabled={loading}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Payment Type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All Payment Types</SelectItem>
+                                    {/* <SelectItem value="all">All Payment Types</SelectItem> */}
                                     <SelectItem value="CREDIT">Credit</SelectItem>
                                     <SelectItem value="MONEY">Money</SelectItem>
                                 </SelectContent>
                             </Select>
 
-                            <Select value={statusFilter} onValueChange={handleStatus}>
+                            <Select value={statusFilter} onValueChange={handleStatus} disabled={loading}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
@@ -381,7 +381,7 @@ const PaymentHistory = () => {
                                 </SelectContent>
                             </Select>
 
-                            <Select value={monthFilter} onValueChange={handleMonths}>
+                            <Select value={monthFilter} onValueChange={handleMonths} disabled={loading}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Month" />
                                 </SelectTrigger>
@@ -402,7 +402,7 @@ const PaymentHistory = () => {
                                 </SelectContent>
                             </Select>
 
-                            <Select value={yearFilter} onValueChange={handleYear}>
+                            <Select value={yearFilter} onValueChange={handleYear} disabled={loading}>
                                 <SelectTrigger className="w-full sm:w-40">
                                     <SelectValue placeholder="Year" />
                                 </SelectTrigger>
@@ -508,7 +508,7 @@ const PaymentHistory = () => {
                                             key={item.licenseId + index}
                                             className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}
                                         >
-                                            {paymentTypeFilter === "CREDIT" ? (
+                                            {item.paymentType === "CREDIT" ? (
                                                 <>
                                                     <td className="py-4 px-4 text-center text-gray-600">{item.licenseId ? item.licenseId : "-"}</td>
                                                     <td className="py-4 px-4 text-center text-gray-600">{item.noOfConnections ? item.noOfConnections : "-"}</td>

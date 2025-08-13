@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, } from "@/components/ui/dialog";
 import { purchaseLicense } from "@/app/api/page";
+import { useCredit } from "@/context/creditContext";
 
 // Service configuration
 const serviceConfig = {
@@ -42,7 +43,7 @@ const PurchaseLicense = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState('idle');
     const [transactionId, setTransactionId] = useState('');
-
+    const { subtractCredits } = useCredit();
     console.log(sliderConnections, selectedServices)
     console.log(paymentStatus)
 
@@ -181,6 +182,7 @@ const PurchaseLicense = () => {
             // const data = await response.json();
             if (data.Success || data.success) {
                 setPaymentStatus('success');
+                subtractCredits(finalTotal)
             } 
             else {
                 setPaymentStatus('failed');

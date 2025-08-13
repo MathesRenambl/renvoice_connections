@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, } from "@/components/ui/dialog";
 import { purchaseCredits } from "@/app/api/page";
+import { useCredit } from "@/context/creditContext";
 
 // Credit configuration
 const creditConfig = {
@@ -59,7 +60,7 @@ const PurchaseCredits = () => {
     const [selectedPackage, setSelectedPackage] = useState(creditConfig.recommendations[1]);
     const [customAmount, setCustomAmount] = useState("");
     const [isCustomMode, setIsCustomMode] = useState(false);
-
+    const { addCredits } = useCredit();
     // State for the modal's multi-step payment flow
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState('idle');
@@ -167,6 +168,7 @@ const PurchaseCredits = () => {
             
             if (data.Success || data.success) {
                 setPaymentStatus('success');
+                addCredits(currentPurchase.finalAmount)
             } else {
                 setPaymentStatus('failed');
                 setErrorMessage(data.message || data.error || 'Payment processing failed');

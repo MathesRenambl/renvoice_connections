@@ -571,8 +571,8 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-gray-600 font-medium mb-1">{item.licenseName}</p>
-                                                <p className="text-xs text-gray-500">Client: <span className="font-medium">{item.clientId}</span></p>
+                                                <p className="text-sm text-gray-600 font-medium mb-1">Client: {item.licenseName ? item.licenseName : "-"}</p>
+                                                {/* <p className="text-xs text-gray-500">Client: <span className="font-medium">{item.clientId}</span></p> */}
                                             </div>
                                         </div>
                                         <div className="text-right">
@@ -589,11 +589,11 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                                                     <Network className="w-4 h-4 text-gray-500" />
                                                     <span className="text-md text-gray-600 font-medium">Total Connections</span>
                                                 </div>
-                                                <span className="font-bold text-gray-900 text-xl text-end">{item.totalConnections}</span>
+                                                <span className="font-bold text-gray-900 text-xl text-end ml-1">{item.totalConnections}</span>
                                             </div>
                                         </div>
                                         <div className="bg-white rounded-lg p-3 border shadow-sm">
-                                            <div className="flex flex-col items-start space-y-2">
+                                            <div className="flex flex-col items-start justify-between space-y-2 h-full">
                                                 <div className="flex items-center space-x-2">
                                                     <CheckCircle className="w-4 h-4 text-green-500" />
                                                     <span className="text-sm text-gray-600 font-medium">Active Connections</span>
@@ -606,7 +606,7 @@ const LicenseUsageAnalytics = ({ onLicenseClick }) => {
                                         </div>
 
                                         <div className="bg-white rounded-lg p-3 border shadow-sm">
-                                            <div className="flex flex-col items-start space-y-2">
+                                            <div className="flex flex-col items-start justify-between space-y-2 h-full">
                                                 <div className="flex items-center space-x-2">
                                                     <XCircle className="w-4 h-4 text-red-500" />
                                                     <span className="text-sm text-gray-600 font-medium">Inactive Connections</span>
