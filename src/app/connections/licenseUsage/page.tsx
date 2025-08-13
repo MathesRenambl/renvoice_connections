@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,6 @@ const LicenseUsagePage = () => {
     const [selectedLicense, setSelectedLicense] = useState("all");
     const [selectedConnectionStatus, setSelectedConnectionStatus] = useState("all");
     const [selectedLastUsage, setSelectedLastUsage] = useState("all");
-    const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
 
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -79,101 +78,78 @@ const LicenseUsagePage = () => {
 
     // Load only license IDs initially
     const fetchLicenseIds = async () => {
-    try {
-        const payLoad = {
-            orgId: ORG_ID,
-            includeLicenseIds: true,
-        };
-        const response = await getConnection(payLoad);
-    
-        if (response.Success && response.Success.licenseIds) {
-            setUniqueLicenseIds(response.Success.licenseIds);
-            setLicenseIdsLoaded(true);
+        try {
+            const payLoad = {
+                orgId: ORG_ID,
+                includeLicenseIds: true,
+            };
+            const response = await getConnection(payLoad);
+        
+            if (response.Success && response.Success.licenseIds) {
+                let liARR = []
+                response.Success.licenseIds.map((i)=>{
+                    liARR.push(i.licenseId)
+                })
+                setUniqueLicenseIds(liARR);
+                setLicenseIdsLoaded(true);
 
-            if (licenseIdFromParams && response.Success.licenseIds.includes(licenseIdFromParams)) {
-                setSelectedLicense(licenseIdFromParams);
+                if (licenseIdFromParams && liARR.includes(licenseIdFromParams)) {
+                    setSelectedLicense(licenseIdFromParams);
+                }
+            } else {
+                console.error("API returned an error:", response.Error || "Unknown error");
+                setUniqueLicenseIds([]);
+                setError("Failed to load license IDs");
             }
-        } else {
-            console.error("API returned an error:", response.Error || "Unknown error");
+        } catch (error) {
+            console.error("Failed to fetch license IDs:", error);
             setUniqueLicenseIds([]);
-            setError("Failed to load license IDs");
+            setError("Failed to fetch license IDs. Please try again.");
         }
-    } catch (error) {
-        console.error("Failed to fetch license IDs:", error);
-        setUniqueLicenseIds([]);
-        setError("Failed to fetch license IDs. Please try again.");
-    }
-};
-
-    //         const response = await fetch('http://192.168.1.31:8000/connection/getConnection', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': `Bearer ${token}`
-    //             },
-    //             body: JSON.stringify(payload),
-    //         });
-
-    //         if (!response.ok) {
-    //             throw new Error(`API Error: ${response.status} ${response.statusText}`);
-    //         }
-    //         const result = await response.json();
-
-    //         if (result.Success && result.Success.licenseIds) {
-    //             setUniqueLicenseIds(result.Success.licenseIds);
-    //             setLicenseIdsLoaded(true);
-
-    //             // Set license from URL parameter if it exists and is valid
-    //             if (licenseIdFromParams && result.Success.licenseIds.includes(licenseIdFromParams)) {
-    //                 setSelectedLicense(licenseIdFromParams);
-    //             }
-    //         } else {
-    //             console.error("API returned an error:", result.Error || "Unknown error");
-    //             setUniqueLicenseIds([]);
-    //             setError("Failed to load license IDs");
-    //         }
-    //     } catch (error) {
-    //         console.error("Failed to fetch license IDs:", error);
-    //         setUniqueLicenseIds([]);
-    //         setError("Failed to fetch license IDs. Please try again.");
-    //     }
-    // };
+    };
 
     // Fetch connections based on selected filters
-    const fetchLicenses = async () => {
-        setLoading(true);
-        setError(null);
+    // Update the fetchLicenses function in your frontend component
+const fetchLicenses = async () => {
+    setLoading(true);
+    setError(null);
 
+    setConnections([]);
+    setTotalConnections(0);
+    setLicenses([]);
 
-        setConnections([]);
-        setTotalConnections(0);
-        setLicenses([]);
+    try {
+        const payload = {
+            orgId: ORG_ID,
+            page: currentPage,
+            limit: recordsPerPage,
+        };
 
-        try {
-            const payload: payload = {
-                orgId: ORG_ID,
-                page: currentPage,
-                limit: recordsPerPage,
-            };
+        if (selectedLicense !== "all") {
+            payload.licenseId = selectedLicense;
+        }
+        if (selectedConnectionStatus !== "all") {
+            payload.connectionStatus = selectedConnectionStatus;
+        }
+        if (selectedLastUsage !== "all") {
+            payload.lastUsageFilter = selectedLastUsage;
+        }
 
-            if (selectedLicense !== "all") {
-                payload.licenseId = selectedLicense;
-            }
-            if (selectedConnectionStatus !== "all") {
-                payload.connectionStatus = selectedConnectionStatus;
-            }
-            if (selectedLastUsage !== "all") {
-                payload.lastUsageFilter = selectedLastUsage;
-            }
+        const result = await getConnection(payload);
+        console.log("API Response:", result);
 
-
-            const result= await getConnection(payload);;
-            console.log("API Response:", result);
-
-            if (result.Success) {
-                const responseData = result.Success;
+        if (result.Success) {
+            const responseData = result.Success;
+            
+            // Handle direct connections array (for connection-level pagination)
+            if (responseData.connections) {
+                setConnections(responseData.connections);
+                setTotalConnections(responseData.total || 0);
+                setLicenses([]); // Not needed for connection-based pagination
+            } 
+            // Handle license-based structure (for license-level pagination)
+            else if (responseData.data) {
                 const licensesData = Array.isArray(responseData.data) ? responseData.data : [];
-
                 setLicenses(licensesData);
 
                 const allConnections = [];
@@ -193,53 +169,41 @@ const LicenseUsagePage = () => {
                     }
                 });
 
-                console.log("Frontend - Connection statuses in response:",
-                    [...new Set(allConnections.map(conn => conn.connectionStatus))]);
-                console.log("Frontend - All connections:", allConnections);
-
                 setConnections(allConnections);
-
-                const actualTotal = responseData.total || allConnections.length;
-                setTotalConnections(actualTotal);
-
-
-                setError(null);
-
-            } else {
-
-                setLicenses([]);
-                setConnections([]);
-                setTotalConnections(0);
-
-
-                if (result.Error === "No data Found." || !result.Success) {
-                    setError("No connections found matching your criteria.");
-                } else {
-                    setError("Failed to fetch connections. Please try again.");
-                }
+                setTotalConnections(responseData.total || allConnections.length);
             }
-        } catch (error) {
-            console.error("Failed to fetch licenses:", error);
+
+            setError(null);
+        } else {
             setLicenses([]);
             setConnections([]);
             setTotalConnections(0);
-            setError('Failed to fetch connections. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
+            if (result.Error === "No data Found." || !result.Success) {
+                setError("No connections found matching your criteria.");
+            } else {
+                setError("Failed to fetch connections. Please try again.");
+            }
+        }
+    } catch (error) {
+        console.error("Failed to fetch licenses:", error);
+        setLicenses([]);
+        setConnections([]);
+        setTotalConnections(0);
+        setError('Failed to fetch connections. Please try again.');
+    } finally {
+        setLoading(false);
+    }
+};
     // Load license IDs on component mount
     useEffect(() => {
         fetchLicenseIds();
     }, []);
 
-
     useEffect(() => {
         if (licenseIdsLoaded && selectedLicense !== "all") {
             fetchLicenses();
         } else if (selectedLicense === "all") {
-
             setConnections([]);
             setTotalConnections(0);
             setLicenses([]);
@@ -260,7 +224,6 @@ const LicenseUsagePage = () => {
     const handleConfirmAction = async () => {
         console.log(`Performing ${selectedAction} on connection:`, selectedConnection.connectionId);
 
-        // Here you would make the API call to perform the action
         try {
             // Example API call structure
             // const response = await fetch(`http://192.168.1.31:8000/connection/${selectedAction}`, {
@@ -306,19 +269,7 @@ const LicenseUsagePage = () => {
         }
     };
 
-    // Apply search filter to connections (this is frontend-only filtering)
-    const paginatedConnections = useMemo(() => {
-        if (!searchTerm) return connections;
-
-        return connections.filter(connection =>
-            (connection.clientId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-            (connection.connectionId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-            (connection.licenseId?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-        );
-    }, [connections, searchTerm]);
-
     const totalPages = Math.ceil(totalConnections / recordsPerPage);
-
 
     const getEmptyStateMessage = () => {
         if (selectedLicense === "all") {
@@ -329,7 +280,7 @@ const LicenseUsagePage = () => {
         } else {
             return {
                 title: "No Connections Found",
-                subtitle: "Try adjusting your search or filter criteria."
+                subtitle: "Try adjusting your filter criteria."
             };
         }
     };
@@ -338,7 +289,6 @@ const LicenseUsagePage = () => {
 
     // Clear all filters
     const handleClearFilters = () => {
-        setSearchTerm("");
         setSelectedLicense("all");
         setSelectedConnectionStatus("all");
         setSelectedLastUsage("all");
@@ -346,11 +296,10 @@ const LicenseUsagePage = () => {
         setError(null);
     };
 
+    const hasActiveFilters = selectedLicense !== "all" || selectedConnectionStatus !== "all" || selectedLastUsage !== "all";
 
-    const hasActiveFilters = searchTerm || selectedLicense !== "all" || selectedConnectionStatus !== "all" || selectedLastUsage !== "all";
-
-    const totalRound=(value) =>{
-        return  Math.round(value * 1000)/1000;
+    const totalRound = (value) => {
+        return Math.round(value * 1000) / 1000;
     }
 
     return (
@@ -364,7 +313,7 @@ const LicenseUsagePage = () => {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Filter className="w-5 h-5" />
-                        Search and Filters
+                        Filters
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -391,7 +340,6 @@ const LicenseUsagePage = () => {
                                 </SelectContent>
                             </Select>
                         </div>
-
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -432,7 +380,8 @@ const LicenseUsagePage = () => {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="mt-7 w-full border-gray-300 focus:border-gray-500 focus:ring-gray-500">
+
+                        <div className="mt-7 w-full">
                             <Button
                                 variant="outline"
                                 onClick={handleClearFilters}
@@ -448,11 +397,6 @@ const LicenseUsagePage = () => {
                         <div className="mt-4 pt-4 border-t border-gray-200">
                             <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-sm font-medium text-gray-600">Active Filters:</span>
-                                {searchTerm && (
-                                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                                        Search: "{searchTerm}"
-                                    </Badge>
-                                )}
                                 {selectedLicense !== "all" && (
                                     <Badge variant="secondary" className="bg-green-100 text-green-800">
                                         License: {selectedLicense}
@@ -504,8 +448,8 @@ const LicenseUsagePage = () => {
                     <table className="w-full min-w-max">
                         <thead className="bg-gray-50">
                             <tr className="border-b border-gray-200">
-                                <th className="text-left py-3 px-4 font-medium text-gray-700">Connection ID</th>
                                 <th className="text-left py-3 px-4 font-medium text-gray-700">Client ID</th>
+                                <th className="text-left py-3 px-4 font-medium text-gray-700">Connection ID</th>
                                 <th className="text-center py-3 px-4 font-medium text-gray-700">Connection Status</th>
                                 <th className="text-center py-3 px-4 font-medium text-gray-700">Usage Credits</th>
                                 <th className="text-center py-3 px-4 font-medium text-gray-700">Last Used</th>
@@ -513,11 +457,11 @@ const LicenseUsagePage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {!error && paginatedConnections.length > 0 ? (
-                                paginatedConnections.map((conn, index) => (
+                            {!error && connections.length > 0 ? (
+                                connections.map((conn, index) => (
                                     <tr key={`${conn.connectionId}-${index}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                        <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.connectionId}</td>
                                         <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.clientId}</td>
+                                        <td className="py-3 px-4 text-sm font-mono text-gray-800">{conn.connectionId}</td>
                                         <td className="py-3 px-4 text-center">
                                             <Badge variant="outline" className={`capitalize ${conn.connectionStatus === 'ACTIVE' ? 'border-green-200 text-green-800 bg-green-100' : 'border-red-200 text-red-800 bg-red-100'}`}>
                                                 <Wifi className="w-3 h-3 mr-1.5" />
@@ -572,15 +516,6 @@ const LicenseUsagePage = () => {
                                         <Network className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                                         <p className="text-lg font-medium text-gray-600">{emptyState.title}</p>
                                         <p className="text-sm">{emptyState.subtitle}</p>
-                                        {/* {hasActiveFilters && !error && (
-                                            <Button 
-                                                variant="outline" 
-                                                onClick={handleClearFilters}
-                                                className="mt-4"
-                                            >
-                                                Clear All Filters
-                                            </Button>
-                                        )} */}
                                     </td>
                                 </tr>
                             )}
@@ -588,7 +523,6 @@ const LicenseUsagePage = () => {
                     </table>
                 </div>
             )}
-
 
             {totalConnections > 0 && totalPages > 1 && !loading && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
@@ -608,7 +542,6 @@ const LicenseUsagePage = () => {
                     </div>
                 </div>
             )}
-
 
             <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
                 <AlertDialogContent>
@@ -653,7 +586,6 @@ const LicenseUsagePage = () => {
             </AlertDialog>
         </div>
     );
-
 };
 
 export default LicenseUsagePage;
